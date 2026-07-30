@@ -1,0 +1,33 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  app:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run build
+
+      # MiniPay rejects Mini Apps whose client JS exceeds 2 MB. Fail the build
+      # rather than discover this at submission time.
+      - name: Check bundle size
+        run: |
+          BYTES=$(find .next/static -name '*.js' -exec cat {} + | wc -c)
+          LIMIT=$((2 * 1024 * 1024))
+          echo "Client JS: $((BYTES / 1024)) KB (limit $((LIMIT / 1024)) KB)"
+          if [ "$BYTES" -gt "$LIMIT" ]; then
+            echo "::error::Client JS bundle exceeds MiniPay's 2 MB limit"
+            exit 1
+          fi
