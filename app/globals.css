@@ -1,0 +1,277 @@
+/* ==========================================================================
+   Escape — design system
+   Mobile-first, authored at 360x640 (MiniPay's hard minimum).
+   Plain CSS only: no Tailwind, no CSS-in-JS. Keeps the JS bundle under 2 MB.
+   ========================================================================== */
+
+:root {
+  /* A dim room lit by one lamp. Dark base, warm amber light, cold locked-door blue. */
+  --bg: #0d0b14;
+  --surface: #161320;
+  --surface-raised: #1f1b2e;
+  --border: #2c2740;
+
+  --text: #ede9f5;
+  --text-dim: #a49cbd;
+  --text-faint: #6b6485;
+
+  --amber: #ffb347; /* light, discovery, the way out */
+  --amber-dim: #7a5423;
+  --cyan: #4fd6e0; /* locks, machines, cold logic */
+  --rose: #ff5c7a; /* danger, time running out */
+  --green: #5fd97f; /* solved */
+
+  --radius: 14px;
+  --radius-sm: 9px;
+
+  /* Type scale — 16px base so mobile browsers never zoom on input focus. */
+  --fs-xs: 0.75rem;
+  --fs-sm: 0.875rem;
+  --fs-base: 1rem;
+  --fs-lg: 1.25rem;
+  --fs-xl: 1.75rem;
+  --fs-2xl: 2.25rem;
+
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+
+  /* Thumb-reachable tap target floor. */
+  --tap: 44px;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  font-size: var(--fs-base);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  /* Stops the pull-to-refresh bounce fighting the room's scroll area. */
+  overscroll-behavior-y: none;
+}
+
+.app-shell {
+  max-width: 480px;
+  margin: 0 auto;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* --- Typography ---------------------------------------------------------- */
+
+h1,
+h2,
+h3 {
+  line-height: 1.2;
+  font-weight: 650;
+  letter-spacing: -0.02em;
+}
+h1 { font-size: var(--fs-2xl); }
+h2 { font-size: var(--fs-xl); }
+h3 { font-size: var(--fs-lg); }
+
+.muted { color: var(--text-dim); }
+.faint { color: var(--text-faint); font-size: var(--fs-sm); }
+
+/* Numerals that don't jitter as a timer counts down. */
+.tabular {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+}
+
+/* --- Layout -------------------------------------------------------------- */
+
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+.stack-sm { gap: var(--space-2); }
+.stack-lg { gap: var(--space-6); }
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+.row-between {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.pad { padding: var(--space-4); }
+.pad-lg { padding: var(--space-5); }
+
+/* --- Surfaces ------------------------------------------------------------ */
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: var(--space-4);
+}
+
+.card-raised {
+  background: var(--surface-raised);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: var(--space-4);
+}
+
+/* The lamp-lit card — used for the daily room and anything that should pull focus. */
+.card-lit {
+  background:
+    radial-gradient(120% 100% at 50% 0%, rgba(255, 179, 71, 0.13), transparent 62%),
+    var(--surface);
+  border: 1px solid var(--amber-dim);
+  border-radius: var(--radius);
+  padding: var(--space-5);
+}
+
+/* --- Buttons ------------------------------------------------------------- */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  min-height: var(--tap);
+  padding: var(--space-3) var(--space-5);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface-raised);
+  color: var(--text);
+  font-size: var(--fs-base);
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  text-decoration: none;
+  transition: transform 0.08s ease, background 0.15s ease, border-color 0.15s ease;
+}
+
+.btn:active { transform: scale(0.98); }
+
+.btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.btn-primary {
+  background: var(--amber);
+  border-color: var(--amber);
+  color: #241704;
+}
+
+.btn-ghost {
+  background: transparent;
+  border-color: var(--border);
+  color: var(--text-dim);
+}
+
+.btn-block {
+  width: 100%;
+}
+
+/* --- Inputs -------------------------------------------------------------- */
+
+.input {
+  width: 100%;
+  min-height: var(--tap);
+  padding: var(--space-3) var(--space-4);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  /* Must stay >=16px or iOS Safari zooms the viewport on focus. */
+  font-size: var(--fs-base);
+  font-family: inherit;
+}
+
+.input::placeholder { color: var(--text-faint); }
+
+.input:focus-visible,
+.btn:focus-visible {
+  outline: 2px solid var(--amber);
+  outline-offset: 2px;
+}
+
+/* --- Badges & pills ------------------------------------------------------ */
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: var(--space-1) var(--space-3);
+  border-radius: 999px;
+  font-size: var(--fs-xs);
+  font-weight: 650;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  background: var(--surface-raised);
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+}
+
+.pill-amber {
+  background: rgba(255, 179, 71, 0.12);
+  border-color: var(--amber-dim);
+  color: var(--amber);
+}
+.pill-cyan {
+  background: rgba(79, 214, 224, 0.12);
+  border-color: rgba(79, 214, 224, 0.35);
+  color: var(--cyan);
+}
+.pill-green {
+  background: rgba(95, 217, 127, 0.12);
+  border-color: rgba(95, 217, 127, 0.35);
+  color: var(--green);
+}
+
+/* --- Utility ------------------------------------------------------------- */
+
+.grow { flex: 1; }
+.center { text-align: center; }
+
+/* Visible to screen readers only — used for labels the layout can't show. */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
