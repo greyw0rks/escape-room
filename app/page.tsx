@@ -60,14 +60,14 @@ export default function Lobby() {
         )}
       </section>
 
-      <nav className="row-between faint" style={{ marginTop: "auto" }}>
-        <Link href="/leaderboard" className="muted">
+      <nav className="row-between" style={{ marginTop: "auto" }}>
+        <Link href="/leaderboard" className="nav-link">
           Leaderboard
         </Link>
-        <Link href="/stats" className="muted">
+        <Link href="/stats" className="nav-link">
           Stats
         </Link>
-        <Link href="/legal" className="muted">
+        <Link href="/legal" className="nav-link">
           Terms
         </Link>
       </nav>

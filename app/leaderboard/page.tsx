@@ -3,7 +3,7 @@ import Link from "next/link";
 export default function Leaderboard() {
   return (
     <main className="stack pad" style={{ paddingTop: "var(--space-6)" }}>
-      <Link href="/" className="faint">
+      <Link href="/" className="nav-link">
         ← Back
       </Link>
       <h1>Today&apos;s leaderboard</h1>

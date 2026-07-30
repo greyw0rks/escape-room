@@ -230,6 +230,9 @@ h3 { font-size: var(--fs-lg); }
   background: var(--surface-raised);
   border: 1px solid var(--border);
   color: var(--text-dim);
+  /* A pill must never wrap — it collapses into a blob when the row is tight. */
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .pill-amber {
@@ -252,6 +255,19 @@ h3 { font-size: var(--fs-lg); }
 
 .grow { flex: 1; }
 .center { text-align: center; }
+
+/* Footer / inline nav links still need a thumb-sized hit area even though the
+   text itself is small. */
+.nav-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--tap);
+  padding: 0 var(--space-2);
+  color: var(--text-dim);
+  text-decoration: none;
+  font-size: var(--fs-sm);
+}
+.nav-link:active { color: var(--amber); }
 
 /* Visible to screen readers only — used for labels the layout can't show. */
 .sr-only {

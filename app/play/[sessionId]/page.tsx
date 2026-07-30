@@ -6,7 +6,7 @@ export default async function Play({ params }: { params: Promise<{ sessionId: st
 
   return (
     <main className="stack pad" style={{ paddingTop: "var(--space-6)" }}>
-      <Link href="/" className="faint">
+      <Link href="/" className="nav-link">
         ← Leave room
       </Link>
       <span className="pill pill-amber">{mode}</span>
