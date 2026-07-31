@@ -1,7 +1,7 @@
 # Handoff — AI Escape Room (Celo MiniPay Mini App)
 
 ## Status snapshot
-Last updated: 2026-07-31
+Last updated: 2026-08-01
 Repo: `/home/greyw0rks/escape-room/` — **public at https://github.com/greyw0rks/escape-room**
 Plan: `/home/greyw0rks/.claude/plans/witty-scribbling-noodle.md`
 Target: **Celo Proof of Ship** monthly sprint → **MiniPay Discovery listing**
@@ -138,6 +138,14 @@ The room was a chat log with a row of buttons. It is now a place you look at.
 - Hotspots are spaced ≥13% apart horizontally: a 44px target on a 360px screen
   is 12% wide, so anything closer steals its neighbour's taps. Verified
   programmatically — zero overlaps, all ≥44px, all clickable.
+- **Verbs open at the object you tapped** (PR #7, 2026-08-01). They used to
+  appear in the bottom bar — up to **462px** of travel on a 640px screen, with
+  the caption text in between, which broke the "the scene is the interface"
+  premise. The popover position is **measured after mount and clamped inside
+  the stage**, not set by a percentage anchor: a percentage can't know how wide
+  six verbs render, so edge objects (wall map, study door) clipped outside the
+  art. It flips above the hotspot when opening below would overflow. Verified
+  across all 7 hotspots at 360×640 and 412×915 — max travel now 151px.
 
 ### CI/CD
 - **CI** (`.github/workflows/ci.yml`) — `app` job (typecheck, vitest, build, 2 MB bundle
@@ -194,6 +202,20 @@ The room was a chat log with a row of buttons. It is now a place you look at.
 - Run typecheck, Vitest, `forge test`, builds, bundle-size checks.
 - Screenshot-verify every screen at 360×640 and catch regressions.
 - Commit and push continuously (Proof of Ship scores commit activity).
+
+### How to screenshot-verify (browser automation works on this box)
+There is **no Playwright in this repo**, but a chromium binary is already cached at
+`~/.cache/ms-playwright/chromium-1234/chrome-linux64/chrome`. To drive the UI:
+
+1. `npm i playwright-core` in a scratch dir (e.g. `/tmp/pwtool`) — *not* in this repo,
+   it doesn't belong in the dependency tree or the bundle budget.
+2. Launch with `chromium.launch({ executablePath: <that path>, args: ["--no-sandbox"] })`.
+3. Point it at `next build && next start` on a spare port, **not `next dev`** — the dev
+   overlay (`<nextjs-portal>`) swallows clicks and renders a stray "N" badge.
+   Start detached: `setsid nohup npx next start -p 3311 > /tmp/er-start.log 2>&1 &`.
+4. Assert on geometry (bounding boxes vs the stage, tap targets ≥44px,
+   `scrollWidth` vs viewport) *and* read the PNG — the Fraunces line-height bug was
+   invisible to DOM probing and only showed up in the image.
 
 ## What requires the human
 
@@ -334,6 +356,18 @@ The room was a chat log with a row of buttons. It is now a place you look at.
   404 that did not exist — the build had run in `Arcadia/arcadia-frontend`, and its
   route table (`/games`, `/tournament`) was the giveaway. Use absolute paths, and if a
   build output looks like a different project, check `pwd` before debugging the code.
+- **2026-08-01 — A percentage anchor cannot place a popover.** The first verb-popover
+  attempt positioned it at the hotspot's `x`/`y` percentages with a magic
+  `clamp(22, x, 78)`. It looked right for mid-scene objects and clipped badly for edge
+  ones — the wall map's buttons ran **24px off the left of the stage** and the study
+  door's ran off the bottom. The clamp cannot work because it doesn't know the
+  popover's rendered width. Fix: `useLayoutEffect` measures `offsetWidth/Height`
+  against the stage and clamps in px. **Lesson: anything whose size depends on its
+  content has to be measured, not guessed at in CSS percentages.**
+- **2026-08-01 — Verifying one element in three positions missed two bugs.** The first
+  pass sampled 3 of 7 hotspots and reported "placement works". Driving *all* hotspots
+  at two viewports is what surfaced the left-clip and bottom-overflow. For anything
+  positioned relative to variable anchors, iterate every anchor.
 
 ---
 
