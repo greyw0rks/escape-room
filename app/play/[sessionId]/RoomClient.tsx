@@ -4,6 +4,8 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import type { ClientRoom } from "@/server/room";
 import type { Action } from "@/server/types";
+import { Mark } from "@/components/Brand";
+import { StudyScene, ObjectIcon } from "@/components/RoomArt";
 
 interface LogLine {
   id: number;
@@ -64,7 +66,11 @@ export default function RoomClient({ mode }: { mode: "practice" | "ranked" }) {
     return () => clearInterval(t);
   }, [score, remaining]);
 
+  // Follow the log as it grows — but not on the very first line. Scrolling
+  // the intro out of view before the player has read it loses the only text
+  // that establishes where they are.
   useEffect(() => {
+    if (log.length <= 1) return;
     logEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [log]);
 
@@ -126,9 +132,15 @@ export default function RoomClient({ mode }: { mode: "practice" | "ranked" }) {
 
   if (!room) {
     return (
-      <main className="pad center stack" style={{ paddingTop: "var(--space-7)" }}>
-        <p className="muted">Opening the room…</p>
-      </main>
+      <div className="loading" role="status" aria-live="polite">
+        <div className="loading-lamp">
+          <Mark size={64} />
+        </div>
+        <p className="label">Unlocking the room</p>
+        <div className="loading-bar">
+          <span />
+        </div>
+      </div>
     );
   }
 
@@ -146,16 +158,29 @@ export default function RoomClient({ mode }: { mode: "practice" | "ranked" }) {
         </Link>
         <span className="pill">{mode === "ranked" ? "Ranked" : "Practice"}</span>
         <span
-          className="tabular room-clock"
-          style={{ color: low ? "var(--rose)" : "var(--text)" }}
+          className={`mono room-clock${low ? " room-clock-low" : ""}`}
           aria-label="Time remaining"
         >
           {mins}:{secs.toString().padStart(2, "0")}
         </span>
       </header>
 
-      <div className="room-progress" aria-hidden="true">
+      <div
+        className="room-progress"
+        role="progressbar"
+        aria-valuenow={Math.round(room.progress * 100)}
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-label="Puzzles solved"
+      >
         <div style={{ width: `${Math.round(room.progress * 100)}%` }} />
+      </div>
+
+      {/* A thin strip of the room, so the player is looking *at* somewhere
+          rather than reading a transcript on a blank screen. */}
+      <div className="room-scene">
+        <StudyScene className="scene" />
+        <div className="room-scene-fade" />
       </div>
 
       <section className="room-log" aria-live="polite">
@@ -173,18 +198,23 @@ export default function RoomClient({ mode }: { mode: "practice" | "ranked" }) {
             <h3>{score.total > 0 ? "You made it out." : "Out of time."}</h3>
             <div className="row-between">
               <span className="muted">Score</span>
-              <strong className="tabular">{score.total}</strong>
+              <strong className="mono score-total">{score.total}</strong>
             </div>
+            <hr className="rule" />
             <div className="row-between faint">
               <span>Time</span>
-              <span className="tabular">
+              <span className="mono">
                 {Math.floor(score.elapsedSec / 60)}:
                 {(score.elapsedSec % 60).toString().padStart(2, "0")}
               </span>
             </div>
             <div className="row-between faint">
               <span>Hints used</span>
-              <span className="tabular">{score.hintsUsed}</span>
+              <span className="mono">{score.hintsUsed}</span>
+            </div>
+            <div className="row-between faint">
+              <span>Wrong attempts</span>
+              <span className="mono">{score.wrongAttempts}</span>
             </div>
           </div>
           <Link href="/" className="btn btn-primary btn-block">
@@ -195,13 +225,13 @@ export default function RoomClient({ mode }: { mode: "practice" | "ranked" }) {
         <section className="room-actions">
           {codeFor ? (
             <div className="stack-sm">
-              <label className="faint" htmlFor="code">
+              <label className="label" htmlFor="code">
                 Enter the code
               </label>
               <div className="row">
                 <input
                   id="code"
-                  className="input grow"
+                  className="input grow mono"
                   inputMode="numeric"
                   value={codeValue}
                   onChange={(e) => setCodeValue(e.target.value)}
@@ -218,7 +248,7 @@ export default function RoomClient({ mode }: { mode: "practice" | "ranked" }) {
             </div>
           ) : talkTo ? (
             <div className="stack-sm">
-              <label className="faint" htmlFor="say">
+              <label className="label" htmlFor="say">
                 Say something
               </label>
               <div className="row">
@@ -241,7 +271,10 @@ export default function RoomClient({ mode }: { mode: "practice" | "ranked" }) {
           ) : selectedObject ? (
             <div className="stack-sm">
               <div className="row-between">
-                <strong>{selectedObject.name}</strong>
+                <span className="row" style={{ gap: 8 }}>
+                  <ObjectIcon id={selectedObject.id} size={20} />
+                  <strong>{selectedObject.name}</strong>
+                </span>
                 <button className="btn btn-ghost" onClick={() => setSelected(null)}>
                   Back
                 </button>
@@ -250,7 +283,7 @@ export default function RoomClient({ mode }: { mode: "practice" | "ranked" }) {
                 {selectedObject.actions.map((action) => (
                   <button
                     key={action}
-                    className="chip"
+                    className="chip chip-action"
                     disabled={busy}
                     onClick={() => {
                       if (action === "talk") {
@@ -278,10 +311,12 @@ export default function RoomClient({ mode }: { mode: "practice" | "ranked" }) {
               <div className="chip-row">
                 {room.objects.map((o) => (
                   <button key={o.id} className="chip" onClick={() => setSelected(o.id)}>
+                    <ObjectIcon id={o.id} size={18} />
                     {o.name}
                   </button>
                 ))}
               </div>
+              <hr className="rule" />
               <div className="row-between">
                 <div className="chip-row grow">
                   {room.inventory.length === 0 ? (
