@@ -282,6 +282,109 @@ h3 { font-size: var(--fs-lg); }
   border: 0;
 }
 
+/* --- The room screen ----------------------------------------------------- */
+
+/* Fixed three-part layout: bar, scrolling log, pinned controls. The controls
+   must never scroll out of thumb reach mid-run. */
+.room {
+  display: flex;
+  flex-direction: column;
+  height: 100dvh;
+}
+
+.room-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-4);
+  border-bottom: 1px solid var(--border);
+}
+
+.room-clock {
+  font-size: var(--fs-lg);
+  font-weight: 700;
+}
+
+.room-progress {
+  height: 3px;
+  background: var(--border);
+}
+.room-progress > div {
+  height: 100%;
+  background: var(--amber);
+  transition: width 0.4s ease;
+}
+
+.room-log {
+  flex: 1;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  /* Fade the top edge so scrolled-past text dissolves instead of being sliced
+     mid-line against the progress bar. */
+  mask-image: linear-gradient(to bottom, transparent 0, #000 18px);
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 18px);
+}
+
+.log {
+  font-size: var(--fs-base);
+  line-height: 1.6;
+}
+.log-narration { color: var(--text); }
+.log-player {
+  color: var(--cyan);
+  font-style: italic;
+}
+.log-system {
+  color: var(--amber);
+  font-size: var(--fs-sm);
+}
+.log-win {
+  color: var(--green);
+  font-weight: 600;
+}
+
+.room-actions {
+  padding: var(--space-4);
+  border-top: 1px solid var(--border);
+  background: var(--surface);
+  /* Clear the home indicator / gesture bar on modern phones. */
+  padding-bottom: max(var(--space-4), env(safe-area-inset-bottom));
+}
+
+.chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.chip {
+  min-height: var(--tap);
+  padding: var(--space-2) var(--space-4);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface-raised);
+  color: var(--text);
+  font-size: var(--fs-sm);
+  font-family: inherit;
+  font-weight: 550;
+  cursor: pointer;
+}
+.chip:active { background: var(--border); }
+.chip:disabled { opacity: 0.45; }
+
+.chip-item {
+  display: inline-flex;
+  align-items: center;
+  background: rgba(255, 179, 71, 0.12);
+  border-color: var(--amber-dim);
+  color: var(--amber);
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
