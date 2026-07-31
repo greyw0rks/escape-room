@@ -5,12 +5,18 @@ import { celo as viemCelo, celoSepolia as viemCeloSepolia } from "viem/chains";
 // DailyRoomPool — one contract, multi-token. The `token` address is passed
 // explicitly on entry and included in the EIP-712 claim signature so a claim
 // signed for one stablecoin cannot be replayed against another.
-export const POOL_ADDRESS = (process.env.NEXT_PUBLIC_POOL_ADDRESS ??
-  "0x0000000000000000000000000000000000000000") as `0x${string}`;
+const DEPLOYED_POOL: Record<"mainnet" | "testnet", `0x${string}`> = {
+  // Not deployed to mainnet yet — Phase 7, and it moves real money.
+  mainnet: "0x0000000000000000000000000000000000000000",
+  testnet: "0x92ca22515502d7e1360f57244fa86ebebcaede9c",
+};
 
 export const CELO_NETWORK_NAME = (process.env.NEXT_PUBLIC_CELO_NETWORK ?? "testnet") as
   | "mainnet"
   | "testnet";
+
+export const POOL_ADDRESS = (process.env.NEXT_PUBLIC_POOL_ADDRESS ??
+  DEPLOYED_POOL[CELO_NETWORK_NAME]) as `0x${string}`;
 
 export const RPC_URL =
   process.env.NEXT_PUBLIC_RPC_URL ??
