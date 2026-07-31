@@ -1,117 +1,147 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect, useState } from "react";
 import { useWallet } from "@/lib/wallet";
 import { aliasFor } from "@/lib/identity";
-import { Wordmark } from "@/components/Brand";
-import { StudyScene } from "@/components/RoomArt";
+import { StudyScene, ObjectIcon } from "@/components/RoomArt";
+import { TabBar } from "@/components/TabBar";
 
 /**
- * Room picker — the app proper. The landing page at `/` is the pitch; this is
- * where a player who already knows what the game is chooses how to play it.
+ * Today feed — the app proper. Built to heal-grow-ui-spec.md screen 2:
+ * day label, banner card, section header + muted subhead, 2-column tile grid,
+ * bottom tabs. The landing page at `/` is the pitch; this is where a player
+ * who already knows the game chooses how to play it.
  */
+
+const WHATS_INSIDE = [
+  { id: "desk", label: "Things to search" },
+  { id: "safe", label: "Locks to open" },
+  { id: "parrot", label: "People to question" },
+  { id: "door", label: "One way out" },
+];
+
+const DAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+
 export default function Play() {
   const { address, connecting, inMiniPay, connect } = useWallet();
+  // Resolved after mount: rendering a date on the server and again on the
+  // client can disagree across a midnight boundary and trip hydration.
+  const [today, setToday] = useState("Today");
+  useEffect(() => setToday(DAYS[new Date().getDay()]), []);
 
   return (
-    <main className="stack-lg pad" style={{ paddingBottom: "var(--space-7)" }}>
-      <header className="row-between rise" style={{ "--i": 0 } as React.CSSProperties}>
-        <Link
-          href="/"
-          aria-label="Escape home"
-          style={{
-            textDecoration: "none",
-            color: "inherit",
-            display: "inline-flex",
-            alignItems: "center",
-            minHeight: "var(--tap)",
-          }}
-        >
-          <Wordmark />
-        </Link>
-        {address ? (
-          <span className="pill">{aliasFor(address)}</span>
-        ) : inMiniPay ? (
-          <span className="faint">Signing you in…</span>
-        ) : null}
-      </header>
-
-      <section
-        className="card-lit stack rise"
-        style={{ "--i": 1, padding: 0, overflow: "hidden" } as React.CSSProperties}
+    <>
+      <main
+        className="stack-lg"
+        style={{ padding: "var(--space-5) var(--space-5) var(--space-6)" }}
       >
-        <div style={{ position: "relative", height: 150 }}>
-          <StudyScene className="scene" />
-          <div className="scene-fade" />
-          <span
-            className="pill pill-amber pill-live"
-            style={{ position: "absolute", top: 12, left: 12 }}
-          >
-            Open now
-          </span>
-        </div>
+        <header className="row-between rise" style={{ "--i": 0 } as React.CSSProperties}>
+          <h1 style={{ fontSize: "var(--fs-xl)" }}>{today}</h1>
+          {address ? (
+            <span className="pill">{aliasFor(address)}</span>
+          ) : inMiniPay ? (
+            <span className="faint">Signing you in…</span>
+          ) : null}
+        </header>
 
-        <div className="stack" style={{ padding: "var(--space-5)", paddingTop: 0 }}>
-          <div className="row-between" style={{ alignItems: "flex-start" }}>
-            <div>
-              <p className="label">Room 001 · Today</p>
-              <h2 style={{ marginTop: 4 }}>The Cartographer&apos;s Study</h2>
-            </div>
-            <span className="pill pill-cyan mono" style={{ marginTop: 4 }}>
-              8:00
+        <Link
+          href="/play/practice"
+          className="banner rise"
+          style={{ "--i": 1 } as React.CSSProperties}
+        >
+          <span className="grow">
+            <span className="banner-title" style={{ display: "block" }}>
+              Try today&apos;s room free
             </span>
-          </div>
-
-          <p className="muted">
-            She left in a hurry and locked the way out behind her. Everything you need is
-            still in the room.
-          </p>
-
-          <Link href="/play/practice" className="btn btn-primary btn-block">
-            Play free practice run
-          </Link>
-          <p className="faint center">No wallet needed. Unlimited tries.</p>
-        </div>
-      </section>
-
-      <section className="stack rise" style={{ "--i": 2 } as React.CSSProperties}>
-        <div className="row-between" style={{ alignItems: "flex-start" }}>
-          <h3>Play for the daily prize</h3>
-          <span className="pill pill-amber" style={{ marginTop: 4 }}>
-            Ranked
+            <span className="banner-sub" style={{ display: "block" }}>
+              No wallet, unlimited tries. Nothing at stake.
+            </span>
           </span>
-        </div>
-        <p className="muted">
-          Everyone plays the same room. Entry goes into today&apos;s pool, and the fastest,
-          cleanest escapes split it when the day closes.
-        </p>
+          <span className="banner-arrow" aria-hidden>
+            →
+          </span>
+        </Link>
 
-        {!address && !inMiniPay && (
-          <button className="btn btn-block" onClick={connect} disabled={connecting}>
-            {connecting ? "Opening wallet…" : "Sign in to play ranked"}
-          </button>
-        )}
+        <section className="rise" style={{ "--i": 2 } as React.CSSProperties}>
+          <h2 className="sec-title">Today&apos;s room</h2>
+          <p className="sec-sub">Everyone plays the same room. It closes at midnight.</p>
 
-        {address && (
-          <Link href="/play/ranked" className="btn btn-block">
-            Enter today&apos;s room
+          <div className="hero-panel" style={{ marginTop: "var(--space-4)" }}>
+            <StudyScene />
+            <div className="hero-overlay">
+              <h2>The Cartographer&apos;s Study</h2>
+              <p>She left in a hurry and locked the way out behind her.</p>
+              {address ? (
+                <Link href="/play/ranked" className="btn btn-primary btn-block">
+                  Enter today&apos;s room
+                </Link>
+              ) : inMiniPay ? (
+                <button className="btn btn-primary btn-block" disabled>
+                  Signing you in…
+                </button>
+              ) : (
+                <button
+                  className="btn btn-primary btn-block"
+                  onClick={connect}
+                  disabled={connecting}
+                >
+                  {connecting ? "Opening wallet…" : "Sign in to play ranked"}
+                </button>
+              )}
+            </div>
+          </div>
+        </section>
+
+        <section className="rise" style={{ "--i": 3 } as React.CSSProperties}>
+          <h2 className="sec-title">What is inside</h2>
+          <p className="sec-sub">Everything you need is already in the room.</p>
+          <ul className="tiles" style={{ marginTop: "var(--space-4)" }}>
+            {WHATS_INSIDE.map((t) => (
+              <li key={t.id}>
+                <div className="tile-art" style={{ display: "grid", placeItems: "center" }}>
+                  <span style={{ color: "#1a1a1a", display: "flex" }}>
+                    <ObjectIcon id={t.id} size={44} />
+                  </span>
+                </div>
+                <span className="tile-label">{t.label}</span>
+              </li>
+            ))}
+          </ul>
+        </section>
+
+        <section className="rise" style={{ "--i": 4 } as React.CSSProperties}>
+          <h2 className="sec-title">Resources</h2>
+          <Link href="/#how" className="resource">
+            <span className="resource-icon" aria-hidden>
+              ?
+            </span>
+            <span>
+              <span className="tag" style={{ display: "block" }}>
+                Guide
+              </span>
+              <span className="resource-title" style={{ display: "block" }}>
+                How the daily prize pool works
+              </span>
+            </span>
           </Link>
-        )}
-      </section>
+          <Link href="/legal" className="resource" style={{ borderBottom: 0 }}>
+            <span className="resource-icon" aria-hidden>
+              §
+            </span>
+            <span>
+              <span className="tag" style={{ display: "block" }}>
+                Legal
+              </span>
+              <span className="resource-title" style={{ display: "block" }}>
+                Terms and privacy
+              </span>
+            </span>
+          </Link>
+        </section>
+      </main>
 
-      <hr className="rule" />
-
-      <nav className="row-between" style={{ marginTop: "auto" }}>
-        <Link href="/leaderboard" className="nav-link">
-          Leaderboard
-        </Link>
-        <Link href="/stats" className="nav-link">
-          Stats
-        </Link>
-        <Link href="/legal" className="nav-link">
-          Terms
-        </Link>
-      </nav>
-    </main>
+      <TabBar active="today" />
+    </>
   );
 }

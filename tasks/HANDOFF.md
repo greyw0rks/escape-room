@@ -98,43 +98,46 @@ visitor (or a MiniPay reviewer) arrived with **no idea what the game was**.
   MiniPay's listing rules require.
 - `/play` and `/play/[sessionId]` coexist — Next gives the static segment precedence.
 
-### Visual identity — "Detective's Study" (2026-07-31)
-The app previously had **zero images** and read as a generic dark template. It now has
-a full design system, a logo, and hand-drawn room art.
+### Visual identity — dark editorial (2026-07-31)
+Built to **`/home/greyw0rks/heal-grow-ui-spec.md`** plus the reference screenshot
+`Screenshot 2026-07-31 201911.png`. Two earlier attempts were rejected: a warm
+"Detective's Study" noir, then a light "paper & ink" scheme. The spec is now the
+source of truth — do not redesign from scratch without it.
 
-- **Direction:** warm lamplight on deep ink. Amber = light/discovery/the way out;
-  cold cyan = locks and machinery. They never swap roles. Chosen over a
-  terminal/hacker look and a bold-editorial look, and deliberately *not* Arcadia's
-  neo-brutalism — the brief was "as polished as Arcadia, but not Arcadia".
-- **Three rules the whole look rests on**, in `app/globals.css`:
-  1. **One easing curve and two durations** (`--ease: cubic-bezier(.16,1,.3,1)`,
-     180ms / 420ms). Every interactive element responds identically.
-  2. **One warm light source.** Colour carries meaning, never decoration.
-  3. **Depth from layered hairlines and glow, never blur.** Cards wear a doubled
-     edge (outer border + inner hairline inset 5px) — that is what reads as
-     *made* rather than *default*.
-- **Three typographic voices, strictly separated:** Fraunces (serif) = the room
-  speaking, Inter = the interface speaking, JetBrains Mono = the machine speaking
-  (clock, codes, scores). Mixing them is the main thing that makes UI read as generic.
-- **All art is hand-authored SVG** — `components/RoomArt.tsx` (study scene + 8 object
-  plates) and `components/Brand.tsx` (keyhole mark + wordmark). No raster art, no AI
-  image generation: SVG recolours from tokens, stays sharp at any DPR, and costs a
-  few KB in-bundle instead of a network fetch on a 2G connection.
-- **New screens that did not exist before:** loading screen (`app/loading.tsx` — the
-  mark flickers like a lamp; a spinner would say "software is busy", a flickering lamp
-  says "you are in a dark room"), a real home/menu with a "How it works" disclosure,
-  and a redesigned room screen with a scene strip, serif narration and iconned chips.
-- **Generated, not exported:** `app/opengraph-image.tsx` and `app/manifest.ts` build the
-  social card and manifest from the same tokens as the app, so they cannot drift the
-  way a hand-exported PNG does.
-- **Submission screenshots** live in `docs/screenshots/` — 5 JPEGs, ~130 KB each,
-  against MiniPay's 500 KB / ≥3 requirement.
-- **Verified at 360×640 on the production build**, all 6 routes: no horizontal
-  overflow, zero tap targets under 44px, no text under 11px, no console errors.
-  Client JS **891 KB / 2048 KB** — the entire identity cost ~50 KB.
-- **Two tap-target regressions were caught by the audit script**, not by eye: the
-  sticky nav's Play button (38px) and the `/play` wordmark link (28px). Keep running
-  `/tmp/audit.mjs`-style checks — a 38px button looks fine in a screenshot.
+- **Tokens:** charcoal `#1a1a1a` ground, `#252525` surfaces, **cream `#e8e0d0`**
+  for every illustration panel, text `#f0ede8` / `#9a9590`, cream CTA with dark
+  label, 4px radius (tight, not pill).
+- **The single strongest rule: art never sits on the charcoal.** Every drawing
+  sits on a cream panel. That contrast is the whole look.
+- **Type:** serif display (Fraunces) for headings and section titles, sans
+  (Inter) light/regular for body, mono for clock and codes. The serif/sans split
+  is what makes it read as editorial rather than as an app template.
+- **Repeating unit:** serif section title + muted sans subhead, then content.
+- **Screens follow the spec's three:** splash-style landing, Today feed
+  (banner card → hero panel with overlay card → 2-col tile grid → resources),
+  and the room. Bottom nav is **text-only tabs, no icons, no indicator bar**.
+
+### Gameplay — tappable scene + prop artifacts (2026-07-31)
+The room was a chat log with a row of buttons. It is now a place you look at.
+
+- **The scene is the interface.** Objects are hotspots positioned over the
+  drawing in *percentage* coordinates (`HOTSPOTS` in `components/RoomArt.tsx`),
+  so they track the art at any screen size. Unfound objects show a breathing
+  ring; found ones shrink to a dot and reveal their name.
+- **Prop artifacts** (`components/Artifacts.tsx`) are the payoff for searching:
+  examining something opens a **full-screen close-up of the actual object** —
+  the letter on aged paper with handwriting and the sailing date in red ink, the
+  chart with its harbour circled, the globe's brass meridian showing **47**, the
+  safe's dials, the ledger. Closing it leaves a **tappable thumbnail** in the
+  caption so a clue can be re-checked without walking the room again.
+- Handwriting is faked with a deterministic sine-based polyline — `Math.random()`
+  would break SSR hydration, and real text at that size is unreadable anyway.
+- Only `inspect`/`read`/`rotate` open a prop. Taking or pushing something does
+  not, so the viewer never interrupts a non-visual action.
+- Text is a **capped caption strip (26vh)** under the art, not a transcript.
+- Hotspots are spaced ≥13% apart horizontally: a 44px target on a 360px screen
+  is 12% wide, so anything closer steals its neighbour's taps. Verified
+  programmatically — zero overlaps, all ≥44px, all clickable.
 
 ### CI/CD
 - **CI** (`.github/workflows/ci.yml`) — `app` job (typecheck, vitest, build, 2 MB bundle
@@ -315,6 +318,17 @@ a full design system, a logo, and hand-drawn room art.
   useful as reference — style #71 "Modern Dark (Cinema Mobile)" informed the token
   system — but its logo/icon generators need a `GEMINI_API_KEY` that isn't configured.
   Net: the design data helped, the component/theme fetching did not.
+- **2026-07-31 — Two full UI directions were built and rejected before the right
+  reference surfaced.** First a warm amber "Detective's Study" noir, then a light
+  "paper & ink" scheme. Both were coherent; both were wrong. The user then supplied
+  `heal-grow-ui-spec.md` + a reference screenshot, which specified the answer exactly
+  (charcoal + cream illustration panels + serif display). **Lesson: when a user says
+  the UI "looks AI generated", ask for a reference image or spec before designing.**
+  Three passes of guessing cost far more than one question would have.
+- **2026-07-31 — A stale file path sent me reading the wrong spec.** The first link
+  pointed at `yieldscout-buildspec.md` (an unrelated hackathon spec); the intended
+  file was `heal-grow-ui-spec.md`. Read the file *before* acting on it and sanity-check
+  that its subject matches the conversation.
 - **2026-07-31 — `cd` inside a Bash tool call persists across later calls.** After
   reading Arcadia's source I ran `npm run build` and spent time debugging a `/play`
   404 that did not exist — the build had run in `Arcadia/arcadia-frontend`, and its
