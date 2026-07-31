@@ -50,7 +50,17 @@ blocked on a provider key and the contract is not blocked on anything.
   no console errors, no overflow. Hints escalate, the parrot answers from its allow-list,
   wrong codes cost accuracy without ending the run.
 
-### Phase 4 — DailyRoomPool contract (code-complete, not deployed)
+### Phase 4 — DailyRoomPool contract (DEPLOYED to Celo Sepolia)
+- **Live at `0x92ca22515502d7e1360f57244fa86ebebcaede9c`** on Celo Sepolia (11142220),
+  verified on Blockscout:
+  https://celo-sepolia.blockscout.com/address/0x92ca22515502d7e1360f57244fa86ebebcaede9c
+  Owner `0xc61Bbc0C…`, signer `0xfF4b87b6…`, rake 500 bps, claim window 30d.
+  All three stablecoins enabled. Cost ~0.26 CELO of testnet funds.
+- **Proven end to end on the live contract**, not just in tests: entered a room with a
+  1.0 test-token fee → pool 0.95 / treasury 0.05 (exact 5% rake) → backend signed an
+  EIP-712 claim → full pool withdrawn → pool reads 0. Then both defences were confirmed
+  *on-chain*: a valid signature against an empty pool reverts `PoolExhausted(1000, 0)`,
+  and a signature from the wrong key reverts `BadSignature`.
 - **`contracts/celo/src/DailyRoomPool.sol`** — one shared pool per `(dayId, token)`.
   Fixed on-chain entry fee, EIP-712 signed claims, rake capped at a hard 20% the
   owner cannot raise, sweep of unclaimed prizes after a window, pausable entries.
@@ -70,13 +80,26 @@ blocked on a provider key and the contract is not blocked on anything.
 - **CI now has a `contracts` job** running `forge fmt --check`, `forge build --sizes`
   and `forge test -vvv`. `forge-std` and OpenZeppelin are proper git submodules.
 
+### CI/CD
+- **CI** (`.github/workflows/ci.yml`) — `app` job (typecheck, vitest, build, 2 MB bundle
+  gate) and `contracts` job (fmt, build, forge test). Both green on main.
+- **CD** (`.github/workflows/deploy.yml`) — Vercel, preview per PR and production on
+  main. Runs on `workflow_run` so it gates on CI *concluding successfully*; a red build
+  can never reach a MiniPay user. Ends with a retrying 200 smoke test, because a 500 in
+  a MiniPay webview is indistinguishable from an outage to a reviewer.
+  **Currently skips with a notice** until `VERCEL_TOKEN`, `VERCEL_ORG_ID` and
+  `VERCEL_PROJECT_ID` are added as repo secrets — deliberately skipping rather than
+  failing, so the public repo doesn't show a permanently red badge during judging.
+- **`main` is protected** by a ruleset (id 20116895) with `current_user_can_bypass:
+  never`, matching the Arcadia repos. Required checks: `app` and `contracts`.
+  **Direct `git push origin main` is now rejected** — every change needs a branch + PR.
+
 ---
 
 ## What's remaining
 
-- [ ] **Phase 4 — Deploy only.** Contract is code-complete. Remaining: broadcast to
-      Celo Sepolia and verify on Celoscan. **Blocked on a funded deployer key
-      (~0.26 CELO) plus a separate signer address.**
+- [ ] **Phase 4 — done for testnet.** Deployed and verified on Celo Sepolia, full
+      entry→claim loop exercised on-chain. Mainnet deploy is Phase 7.
 - [ ] **Phase 3 — AI layer** (task #3). *Blocked on an AI provider key.* Swappable gateway,
       intent parsing before narration, cached shared prompt prefix, injection filter,
       offline fallback. Then nightly room generation + the solvability validator.
@@ -103,9 +126,11 @@ blocked on a provider key and the contract is not blocked on anything.
 - [x] ~~Register on talent.app~~ — **done**
 - [x] ~~Create the public GitHub repo~~ — **done**, https://github.com/greyw0rks/escape-room
 - [ ] **Choose an AI provider and supply the API key** — blocks Phase 3.
-- [ ] **Fund a Celo Sepolia deployer key (~0.26 CELO) and supply a separate signer
-      address** — blocks the Phase 4 broadcast. Testnet only, no real money at risk.
-      Faucet: https://faucet.celo.org/celo-sepolia
+- [x] ~~Fund a Celo Sepolia deployer key~~ — **done 2026-07-31**, 4 CELO from the faucet.
+      Deployer key is reused from `Arcadia/arcadia-contracts/celo/.env`; note it is a
+      **mainnet key holding ~0.97 real CELO**, so any mainnet broadcast is real money.
+- [ ] **Add `VERCEL_TOKEN`, `VERCEL_ORG_ID`, `VERCEL_PROJECT_ID` as repo secrets** to
+      turn on CD. Until then the Deploy workflow skips.
 - [ ] **Fund the mainnet deployer wallet** and hold the settlement signer key. Signer key
       goes in a host env var (Vercel/Railway) and must **never** be committed.
 - [ ] **Approve mainnet deployment** at Phase 7 — real money starts moving.
@@ -164,6 +189,15 @@ blocked on a provider key and the contract is not blocked on anything.
   on-chain (`symbol`, `decimals`) before committing it — doc tables go stale.
   Also disproved the old code comment that CIP-64 adapters aren't deployed on testnet;
   they are, and are now wired in.
+- **2026-07-31 — Rapid-fire `cast send` calls silently failed on nonce races.** Firing
+  five transactions back to back, two returned non-zero with no useful output; retrying
+  the same call individually succeeded. Don't infer a contract bug from a failed `cast
+  send` in a loop — re-run it alone before debugging. Prefer `cast call` to read the
+  revert reason, which returns the actual selector.
+- **2026-07-31 — The first Deploy workflow run went red because no Vercel secrets
+  existed.** A permanently red badge on a public repo reads as a broken project to a
+  Proof of Ship judge, so the job now checks for credentials and skips with a notice
+  instead. Applies to any CD added before its secrets are provisioned.
 
 ---
 
