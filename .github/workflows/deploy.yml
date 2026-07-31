@@ -1,0 +1,75 @@
+name: Deploy
+
+# Preview per PR, production on merge to main. Both are gated on CI: the
+# `deploy` job waits for the CI workflow to conclude and refuses to publish
+# anything if it failed, so a red build can never reach a MiniPay user.
+on:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+
+concurrency:
+  group: deploy-${{ github.event.workflow_run.head_branch }}
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    if: github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    environment:
+      name: ${{ github.event.workflow_run.head_branch == 'main' && 'production' || 'preview' }}
+      url: ${{ steps.publish.outputs.url }}
+    env:
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+      IS_PROD: ${{ github.event.workflow_run.head_branch == 'main' }}
+    steps:
+      # workflow_run always checks out the default branch, so pin to the exact
+      # commit CI actually tested — otherwise a PR preview would build main.
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm install --global vercel@latest
+
+      - name: Pull Vercel environment
+        run: |
+          TARGET=$([ "$IS_PROD" = "true" ] && echo production || echo preview)
+          vercel pull --yes --environment="$TARGET" --token="${{ secrets.VERCEL_TOKEN }}"
+
+      - name: Build
+        run: |
+          if [ "$IS_PROD" = "true" ]; then
+            vercel build --prod --token="${{ secrets.VERCEL_TOKEN }}"
+          else
+            vercel build --token="${{ secrets.VERCEL_TOKEN }}"
+          fi
+
+      - name: Publish
+        id: publish
+        run: |
+          if [ "$IS_PROD" = "true" ]; then
+            URL=$(vercel deploy --prebuilt --prod --token="${{ secrets.VERCEL_TOKEN }}")
+          else
+            URL=$(vercel deploy --prebuilt --token="${{ secrets.VERCEL_TOKEN }}")
+          fi
+          echo "url=$URL" >> "$GITHUB_OUTPUT"
+          echo "Deployed to $URL"
+
+      # MiniPay renders the app in a webview, so a deploy that returns a 500 is
+      # indistinguishable from an outage to a reviewer. Fail loudly instead.
+      - name: Smoke test
+        run: |
+          for i in 1 2 3 4 5; do
+            CODE=$(curl -sS -o /dev/null -w '%{http_code}' "${{ steps.publish.outputs.url }}" || echo 000)
+            [ "$CODE" = "200" ] && echo "OK ($CODE)" && exit 0
+            echo "attempt $i: HTTP $CODE, retrying"
+            sleep 5
+          done
+          echo "::error::Deployment did not return 200"
+          exit 1
