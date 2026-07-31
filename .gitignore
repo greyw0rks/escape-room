@@ -12,3 +12,8 @@ contracts/celo/out/
 contracts/celo/cache/
 contracts/celo/broadcast/
 .vercel
+
+# Vendored design-reference skills (ui-ux-pro-max). Third-party tooling, not
+# project source — reinstall from github.com/nextlevelbuilder/ui-ux-pro-max-skill
+.claude/skills/uiux-design/
+.claude/skills/uiux-styling/

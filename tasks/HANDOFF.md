@@ -80,6 +80,41 @@ blocked on a provider key and the contract is not blocked on anything.
 - **CI now has a `contracts` job** running `forge fmt --check`, `forge build --sizes`
   and `forge test -vvv`. `forge-std` and OpenZeppelin are proper git submodules.
 
+### Visual identity — "Detective's Study" (2026-07-31)
+The app previously had **zero images** and read as a generic dark template. It now has
+a full design system, a logo, and hand-drawn room art.
+
+- **Direction:** warm lamplight on deep ink. Amber = light/discovery/the way out;
+  cold cyan = locks and machinery. They never swap roles. Chosen over a
+  terminal/hacker look and a bold-editorial look, and deliberately *not* Arcadia's
+  neo-brutalism — the brief was "as polished as Arcadia, but not Arcadia".
+- **Three rules the whole look rests on**, in `app/globals.css`:
+  1. **One easing curve and two durations** (`--ease: cubic-bezier(.16,1,.3,1)`,
+     180ms / 420ms). Every interactive element responds identically.
+  2. **One warm light source.** Colour carries meaning, never decoration.
+  3. **Depth from layered hairlines and glow, never blur.** Cards wear a doubled
+     edge (outer border + inner hairline inset 5px) — that is what reads as
+     *made* rather than *default*.
+- **Three typographic voices, strictly separated:** Fraunces (serif) = the room
+  speaking, Inter = the interface speaking, JetBrains Mono = the machine speaking
+  (clock, codes, scores). Mixing them is the main thing that makes UI read as generic.
+- **All art is hand-authored SVG** — `components/RoomArt.tsx` (study scene + 8 object
+  plates) and `components/Brand.tsx` (keyhole mark + wordmark). No raster art, no AI
+  image generation: SVG recolours from tokens, stays sharp at any DPR, and costs a
+  few KB in-bundle instead of a network fetch on a 2G connection.
+- **New screens that did not exist before:** loading screen (`app/loading.tsx` — the
+  mark flickers like a lamp; a spinner would say "software is busy", a flickering lamp
+  says "you are in a dark room"), a real home/menu with a "How it works" disclosure,
+  and a redesigned room screen with a scene strip, serif narration and iconned chips.
+- **Generated, not exported:** `app/opengraph-image.tsx` and `app/manifest.ts` build the
+  social card and manifest from the same tokens as the app, so they cannot drift the
+  way a hand-exported PNG does.
+- **Submission screenshots** live in `docs/screenshots/` — 4 JPEGs, ~130 KB each,
+  against MiniPay's 500 KB / ≥3 requirement.
+- **Verified at 360×640 on the production build**, all 5 routes: no horizontal
+  overflow, zero tap targets under 44px, no text under 11px, no console errors.
+  Client JS **891 KB / 2048 KB** — the entire identity cost ~50 KB.
+
 ### CI/CD
 - **CI** (`.github/workflows/ci.yml`) — `app` job (typecheck, vitest, build, 2 MB bundle
   gate) and `contracts` job (fmt, build, forge test). Both green on main.
@@ -120,20 +155,8 @@ blocked on a provider key and the contract is not blocked on anything.
       signed claim. Anti-cheat. Swap the in-memory session store for Postgres.
 - [ ] **Phase 6 — Listing surface** (task #6). Real leaderboard, `/stats` metrics, full
       ToS/Privacy, in-app support link.
-- [ ] **Visual identity + game art — NOT STARTED, and the app currently has zero images.**
-      No `public/` directory, no favicon, no app icon, no OG image, no `manifest.json`,
-      and not a single `<Image>`/`.png` reference anywhere in the codebase. The game is
-      pure text right now, which reads as a tech demo rather than a product.
-      This blocks submission on two separate fronts:
-      - **MiniPay intake form requires ≥3 screenshots**, PNG/JPG, max 500 KB each,
-        "showing the app in action" — screenshots of an all-text screen will not pass.
-      - **MiniPay requires app name + logo displayed prominently** and "clearly distinct
-        from MiniPay's own branding", so a user knows who operates the service.
-      Minimum set to build: app icon/logo, favicon, OG/social preview, and per-room
-      scene art (the seed room "The Cartographer's Study" needs a hero image plus
-      object art for the desk, globe, portrait, door and parrot).
-      Note the **2 MB MiniPay client-JS cap** is separate from image weight, but images
-      still need compressing — lazy-load and prefer WebP/AVIF with PNG fallback.
+- [x] ~~**Visual identity + game art**~~ — **done 2026-07-31.** See "Visual identity" above.
+      Remaining art work is *additional* rooms, not the first one.
 - [ ] **Phase 7 — Mainnet + submission** (task #7).
 
 ---
@@ -153,6 +176,15 @@ blocked on a provider key and the contract is not blocked on anything.
 - [x] ~~Register on talent.app~~ — **done**
 - [x] ~~Create the public GitHub repo~~ — **done**, https://github.com/greyw0rks/escape-room
 - [ ] **Choose an AI provider and supply the API key** — blocks Phase 3.
+      Decided: **Google Gemini**. Put the key in `escape-room/.env.local` as
+      `GEMINI_API_KEY=` (gitignored; see `.env.example`), and in Vercel → Settings →
+      Environment Variables for production. **Do not** prefix it `NEXT_PUBLIC_` — that
+      would inline it into the client bundle for every player to read.
+      Model choice is quota-driven, not quality-driven: `gemini-3.1-flash-lite` has
+      **500 requests/day** vs `gemini-3.6-flash`'s **20/day**, and hints are short and
+      heavily prompt-constrained. Note the account's **image models are all at 0 quota**
+      except Imagen 4 (25/day), so AI art is not currently an option — which is fine,
+      the room art is hand-drawn SVG.
 - [x] ~~Fund a Celo Sepolia deployer key~~ — **done 2026-07-31**, 4 CELO from the faucet.
       Deployer key is reused from `Arcadia/arcadia-contracts/celo/.env`; note it is a
       **mainnet key holding ~0.97 real CELO**, so any mainnet broadcast is real money.
@@ -240,6 +272,28 @@ blocked on a provider key and the contract is not blocked on anything.
   p5.js app that returns a healthy 200. Lesson: when smoke-testing a deploy, assert on
   page *content* (title/markup), not just the status code, and confirm you're hitting
   your own alias.
+- **2026-07-31 — `line-height: 1.22` is the floor for Fraunces headings.** At 1.12 the
+  descenders (g/y/p) were sliced off the moment a heading wrapped to a second line —
+  it looked like a z-index/overlap bug, and probing the DOM showed no overlap at all.
+  Only cropping the element and *looking* at it revealed the real cause. Lesson: when
+  a layout looks wrong but the geometry says it's fine, screenshot the element itself.
+- **2026-07-31 — Next's dev overlay intercepts Playwright clicks.** `<nextjs-portal>`
+  sits above the page and swallowed pointer events, so scripted playthroughs timed out
+  on visible, enabled buttons. It also renders a stray "N" badge that looks like a UI
+  bug in dev screenshots. Fix: run UI verification against `next build && next start`,
+  which is more honest anyway.
+- **2026-07-31 — Satori (`next/og`) requires explicit `display: flex`** on any div with
+  more than one child, and does not support `<br>`. The build fails hard rather than
+  degrading, so the OG route breaks the whole deploy if this is wrong.
+- **2026-07-31 — 21st.dev MCP and the ui-ux-pro-max skill were both installed and only
+  partly useful.** 21st connects fine, but its "themes" are generic shadcn/Tailwind
+  token sets (`--primary`, `--sidebar-accent`…) with no atmosphere, and this project is
+  deliberately plain CSS with no Tailwind — importing one would have fought the
+  architecture for no gain. Its *component* catalogue is also paid. The ui-ux-pro-max
+  skill's **data** (84 style specs with concrete CSS, 74 font pairings) was genuinely
+  useful as reference — style #71 "Modern Dark (Cinema Mobile)" informed the token
+  system — but its logo/icon generators need a `GEMINI_API_KEY` that isn't configured.
+  Net: the design data helped, the component/theme fetching did not.
 
 ---
 
