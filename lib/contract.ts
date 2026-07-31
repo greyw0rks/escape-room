@@ -32,10 +32,8 @@ export interface CeloTokenMeta {
   label: string;
   decimals: number;
   tokenAddress: `0x${string}`;
-  feeCurrencyAddress: `0x${string}` | null; // CIP-64; null on testnet (adapters not deployed)
+  feeCurrencyAddress: `0x${string}`; // CIP-64
 }
-
-const ZERO = "0x0000000000000000000000000000000000000000" as `0x${string}`;
 
 // Canonical Celo mainnet addresses. Source: celopedia-skill references/contracts.md
 const MAINNET = {
@@ -52,42 +50,53 @@ const MAINNET_FEE_CURRENCY: Record<CeloToken, `0x${string}`> = {
   usdt: "0x0e2a3e05bc9a16f5292a6170456a710cb89c6f72",
 };
 
+// Celo Sepolia. Each address below was read back on-chain (symbol + decimals)
+// rather than trusted from a doc table — the skill's reference lists
+// 0xEF4d55…, but that contract reports "cUSD"/"Celo Dollar". The real USDm is
+// 0xdE9e4C…, and both are separately registered in the FeeCurrencyDirectory.
+const TESTNET = {
+  usdm: "0xdE9e4C3ce781b4bA68120d6261cbad65ce0aB00b", // Mento Dollar, 18 dec
+  usdc: "0x01C5C0122039549AD1493B8220cABEdD739BC44E", // 6 dec
+  usdt: "0xd077A400968890Eacc75cdc901F0356c943e4fDb", // 6 dec
+} as const;
+
+// Sepolia fee adapters, resolved via FeeCurrencyDirectory.getCurrencies() and
+// confirmed by calling adaptedToken() on each.
+const TESTNET_FEE_CURRENCY: Record<CeloToken, `0x${string}`> = {
+  usdm: "0xdE9e4C3ce781b4bA68120d6261cbad65ce0aB00b",
+  usdc: "0xbf1441Ea57f43f35f713431001f35742c88071c7",
+  usdt: "0xe19447B12cb0d0220B2a501D8382be2f61CcF92a",
+};
+
 function envAddr(name: string, fallback: string): `0x${string}` {
   return (process.env[name] ?? fallback) as `0x${string}`;
 }
 
 const isMainnet = CELO_NETWORK_NAME === "mainnet";
+const TOKENS = isMainnet ? MAINNET : TESTNET;
+const FEE_CURRENCY = isMainnet ? MAINNET_FEE_CURRENCY : TESTNET_FEE_CURRENCY;
 
 export const CELO_TOKENS: Record<CeloToken, CeloTokenMeta> = {
   usdm: {
     id: "usdm",
     label: "USDm",
     decimals: 18,
-    tokenAddress: envAddr(
-      "NEXT_PUBLIC_TOKEN_ADDRESS_USDM",
-      isMainnet ? MAINNET.usdm : ZERO
-    ),
-    feeCurrencyAddress: isMainnet ? MAINNET_FEE_CURRENCY.usdm : null,
+    tokenAddress: envAddr("NEXT_PUBLIC_TOKEN_ADDRESS_USDM", TOKENS.usdm),
+    feeCurrencyAddress: FEE_CURRENCY.usdm,
   },
   usdc: {
     id: "usdc",
     label: "USDC",
     decimals: 6,
-    tokenAddress: envAddr(
-      "NEXT_PUBLIC_TOKEN_ADDRESS_USDC",
-      isMainnet ? MAINNET.usdc : ZERO
-    ),
-    feeCurrencyAddress: isMainnet ? MAINNET_FEE_CURRENCY.usdc : null,
+    tokenAddress: envAddr("NEXT_PUBLIC_TOKEN_ADDRESS_USDC", TOKENS.usdc),
+    feeCurrencyAddress: FEE_CURRENCY.usdc,
   },
   usdt: {
     id: "usdt",
     label: "USDT",
     decimals: 6,
-    tokenAddress: envAddr(
-      "NEXT_PUBLIC_TOKEN_ADDRESS_USDT",
-      isMainnet ? MAINNET.usdt : ZERO
-    ),
-    feeCurrencyAddress: isMainnet ? MAINNET_FEE_CURRENCY.usdt : null,
+    tokenAddress: envAddr("NEXT_PUBLIC_TOKEN_ADDRESS_USDT", TOKENS.usdt),
+    feeCurrencyAddress: FEE_CURRENCY.usdt,
   },
 };
 
