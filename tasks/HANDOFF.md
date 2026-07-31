@@ -83,13 +83,18 @@ blocked on a provider key and the contract is not blocked on anything.
 ### CI/CD
 - **CI** (`.github/workflows/ci.yml`) — `app` job (typecheck, vitest, build, 2 MB bundle
   gate) and `contracts` job (fmt, build, forge test). Both green on main.
-- **CD** (`.github/workflows/deploy.yml`) — Vercel, preview per PR and production on
-  main. Runs on `workflow_run` so it gates on CI *concluding successfully*; a red build
-  can never reach a MiniPay user. Ends with a retrying 200 smoke test, because a 500 in
-  a MiniPay webview is indistinguishable from an outage to a reviewer.
-  **Currently skips with a notice** until `VERCEL_TOKEN`, `VERCEL_ORG_ID` and
-  `VERCEL_PROJECT_ID` are added as repo secrets — deliberately skipping rather than
-  failing, so the public repo doesn't show a permanently red badge during judging.
+- **CD — Vercel's native GitHub integration**, project
+  `greyw0rks-projects/escape-room` (`prj_ZXZthN9GA1dTyXLrDmsudw8M7KAq`), production
+  branch `main`. Preview URL per PR, production on merge. No secrets to manage.
+  Env vars set for all targets: `NEXT_PUBLIC_CELO_NETWORK=testnet`,
+  `NEXT_PUBLIC_POOL_ADDRESS=0x92ca2251…de9c`.
+- **A GitHub Actions deploy workflow was written and then deleted.** Vercel's GitHub
+  App already deploys on push, so keeping both meant two competing deploys per commit.
+  See the failures log for why a token-based workflow wasn't viable.
+- **Known gap:** the Git integration deploys on push *regardless of CI*. CI still runs
+  and reports, but cannot block a bad commit from reaching a preview URL. Acceptable
+  while main is PR-protected (checks must pass before merge), but revisit before the
+  MiniPay listing — a broken production deploy is visible to reviewers.
 - **`main` is protected** by a ruleset (id 20116895) with `current_user_can_bypass:
   never`, matching the Arcadia repos. Required checks: `app` and `contracts`.
   **Direct `git push origin main` is now rejected** — every change needs a branch + PR.
@@ -129,8 +134,7 @@ blocked on a provider key and the contract is not blocked on anything.
 - [x] ~~Fund a Celo Sepolia deployer key~~ — **done 2026-07-31**, 4 CELO from the faucet.
       Deployer key is reused from `Arcadia/arcadia-contracts/celo/.env`; note it is a
       **mainnet key holding ~0.97 real CELO**, so any mainnet broadcast is real money.
-- [ ] **Add `VERCEL_TOKEN`, `VERCEL_ORG_ID`, `VERCEL_PROJECT_ID` as repo secrets** to
-      turn on CD. Until then the Deploy workflow skips.
+- [x] ~~Set up Vercel CD~~ — **done 2026-07-31** via Vercel's GitHub App; no secrets needed.
 - [ ] **Fund the mainnet deployer wallet** and hold the settlement signer key. Signer key
       goes in a host env var (Vercel/Railway) and must **never** be committed.
 - [ ] **Approve mainnet deployment** at Phase 7 — real money starts moving.
@@ -198,6 +202,15 @@ blocked on a provider key and the contract is not blocked on anything.
   existed.** A permanently red badge on a public repo reads as a broken project to a
   Proof of Ship judge, so the job now checks for credentials and skips with a notice
   instead. Applies to any CD added before its secrets are provisioned.
+- **2026-07-31 — Could not mint a Vercel CI token programmatically.**
+  `POST /v3/user/tokens` returns `forbidden: Cannot create tokens for this app` when
+  authenticated with the CLI's OAuth token. The local CLI token in
+  `~/.local/share/com.vercel.cli/auth.json` is *also* unusable as a CI secret: it is
+  short-lived (the one seen expired the same day, and `expiresAt` is in **seconds**,
+  not milliseconds — decoding it as ms gives a nonsense 1970 date). A long-lived token
+  must be created by hand at vercel.com/account/tokens. Sidestepped entirely by using
+  Vercel's GitHub App instead, which needs no token — so the Actions deploy workflow
+  was deleted rather than left half-wired.
 
 ---
 
