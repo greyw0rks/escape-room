@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import Link from "next/link";
 import type { ClientRoom } from "@/server/room";
 import type { Action } from "@/server/types";
@@ -44,6 +44,41 @@ export default function RoomClient({ mode }: { mode: "practice" | "ranked" }) {
   const capEndRef = useRef<HTMLDivElement>(null);
   const nextLogId = useRef(0);
   const pendingArtifact = useRef<string | null>(null);
+  const stageRef = useRef<HTMLDivElement>(null);
+  const verbsRef = useRef<HTMLDivElement>(null);
+  /** Resolved px offset of the verb popover inside the stage. Null until measured. */
+  const [verbsAt, setVerbsAt] = useState<{ left: number; top: number } | null>(null);
+
+  /* The popover has to be measured before it can be placed: a percentage anchor
+     can't know how wide six verbs render, so edge objects clipped outside the
+     stage. Measure, then clamp fully inside. */
+  useLayoutEffect(() => {
+    const stage = stageRef.current;
+    const pop = verbsRef.current;
+    if (!selected || !stage || !pop) {
+      setVerbsAt(null);
+      return;
+    }
+    const at = HOTSPOTS[selected];
+    if (!at) return;
+
+    const sw = stage.clientWidth;
+    const sh = stage.clientHeight;
+    const pw = pop.offsetWidth;
+    const ph = pop.offsetHeight;
+    const gap = 14;
+    const pad = 8;
+    const hx = (at.x / 100) * sw;
+    const hy = (at.y / 100) * sh;
+
+    // Prefer below the hotspot; flip above when that would overflow the stage.
+    let top = hy + gap;
+    if (top + ph > sh - pad) top = hy - gap - ph;
+    setVerbsAt({
+      left: clamp(hx - pw / 2, pad, Math.max(pad, sw - pw - pad)),
+      top: clamp(top, pad, Math.max(pad, sh - ph - pad)),
+    });
+  }, [selected]);
 
   const addLog = useCallback(
     (kind: LogLine["kind"], text: string, artifactId?: string) => {
@@ -208,7 +243,7 @@ export default function RoomClient({ mode }: { mode: "practice" | "ranked" }) {
       </div>
 
       {/* The room itself. You tap the thing, not a list of its name. */}
-      <div className="room-stage">
+      <div className="room-stage" ref={stageRef}>
         <StudyScene />
         {room.objects.map((o) => {
           const at = HOTSPOTS[o.id];
@@ -229,6 +264,60 @@ export default function RoomClient({ mode }: { mode: "practice" | "ranked" }) {
             </button>
           );
         })}
+
+        {/* Verbs open right where you tapped. Anchoring them to the bottom bar
+            meant up to 462px of travel on a 640px screen — you tapped the wall
+            map at the top and its buttons appeared at the very bottom. */}
+        {selectedObject && HOTSPOTS[selectedObject.id] && (
+          <div
+            ref={verbsRef}
+            className="verbs"
+            style={
+              verbsAt
+                ? { left: verbsAt.left, top: verbsAt.top }
+                : /* First paint is off-screen so the measurement never flashes
+                     in the wrong place. */
+                  { left: 0, top: 0, visibility: "hidden" }
+            }
+          >
+            <div className="verbs-head">
+              <span className="verbs-name">{selectedObject.name}</span>
+              <button
+                className="verbs-close"
+                onClick={() => setSelected(null)}
+                aria-label="Close"
+              >
+                ✕
+              </button>
+            </div>
+            <div className="verbs-row">
+              {selectedObject.actions.map((action) => (
+                <button
+                  key={action}
+                  className="verb"
+                  disabled={busy}
+                  onClick={() => {
+                    if (action === "talk") {
+                      setTalkTo(selectedObject.id);
+                      setSelected(null);
+                    } else if (action === "insert") {
+                      setCodeFor(selectedObject.id);
+                      setSelected(null);
+                    } else {
+                      doAction(
+                        selectedObject.id,
+                        action,
+                        `${label(action)} the ${selectedObject.name.toLowerCase()}`
+                      );
+                    }
+                  }}
+                >
+                  {label(action)}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* What you just found. Short, and never a scrolling transcript. */}
@@ -337,44 +426,6 @@ export default function RoomClient({ mode }: { mode: "practice" | "ranked" }) {
                 Stop talking
               </button>
             </div>
-          ) : selectedObject ? (
-            <div className="stack-sm">
-              <div className="row-between">
-                <span className="row" style={{ gap: 8 }}>
-                  <ObjectIcon id={selectedObject.id} size={18} />
-                  <strong>{selectedObject.name}</strong>
-                </span>
-                <button className="btn btn-ghost" onClick={() => setSelected(null)}>
-                  Back
-                </button>
-              </div>
-              <div className="chip-row">
-                {selectedObject.actions.map((action) => (
-                  <button
-                    key={action}
-                    className="chip"
-                    disabled={busy}
-                    onClick={() => {
-                      if (action === "talk") {
-                        setTalkTo(selectedObject.id);
-                        setSelected(null);
-                      } else if (action === "insert") {
-                        setCodeFor(selectedObject.id);
-                        setSelected(null);
-                      } else {
-                        doAction(
-                          selectedObject.id,
-                          action,
-                          `${label(action)} the ${selectedObject.name.toLowerCase()}`
-                        );
-                      }
-                    }}
-                  >
-                    {label(action)}
-                  </button>
-                ))}
-              </div>
-            </div>
           ) : (
             <div className="row-between">
               <div className="chip-row grow">
@@ -430,6 +481,10 @@ export default function RoomClient({ mode }: { mode: "practice" | "ranked" }) {
       )}
     </main>
   );
+}
+
+function clamp(v: number, lo: number, hi: number): number {
+  return Math.min(hi, Math.max(lo, v));
 }
 
 function label(action: Action): string {

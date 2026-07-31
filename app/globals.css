@@ -1271,3 +1271,96 @@ h3 {
     transition-duration: 0.01ms !important;
   }
 }
+
+/* --- Verb popover --------------------------------------------------------
+   The actions for an object open next to the object itself. Anchoring them to
+   the bottom bar meant up to 462px of travel on a 640px screen: you tapped the
+   wall map at the top and its buttons appeared at the very bottom, with the
+   caption text in between.
+   Position is set in px by RoomClient, which measures the popover and clamps it
+   inside the stage — a percentage anchor cannot know how wide the verbs render,
+   so edge objects clipped outside the art. */
+
+.verbs {
+  position: absolute;
+  z-index: 5;
+  min-width: 148px;
+  max-width: 220px;
+  padding: var(--space-2);
+  background: rgba(26, 26, 26, 0.96);
+  border-radius: var(--radius);
+  box-shadow: 0 10px 28px -10px rgba(0, 0, 0, 0.7);
+  animation: lift-in var(--fast) var(--ease);
+}
+
+.verbs-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  padding-left: var(--space-2);
+}
+
+.verbs-name {
+  padding: 2px 0 var(--space-2);
+  font-size: var(--fs-xs);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-2);
+}
+
+/* Sits in the title row rather than the verb grid: as a flex item it wrapped
+   onto a row of its own and made the popover taller than the verbs needed. */
+.verbs-close {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  width: var(--tap);
+  height: var(--tap);
+  margin-bottom: var(--space-2);
+  background: none;
+  border: 0;
+  border-radius: var(--radius);
+  color: var(--text-2);
+  font-size: var(--fs-13);
+  line-height: 1;
+  cursor: pointer;
+}
+
+.verbs-close:active {
+  background: var(--surface-2);
+  color: var(--text);
+}
+
+.verbs-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.verb {
+  flex: 1 1 auto;
+  min-height: var(--tap);
+  padding: 0 var(--space-3);
+  background: var(--surface-2);
+  border: 0;
+  border-radius: var(--radius);
+  color: var(--text);
+  font-family: inherit;
+  font-size: var(--fs-13);
+  white-space: nowrap;
+  cursor: pointer;
+  transition: transform var(--fast) var(--ease), background var(--fast) var(--ease);
+}
+
+.verb:active {
+  transform: scale(0.96);
+  background: var(--cream);
+  color: #1a1a1a;
+}
+
+.verb:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
