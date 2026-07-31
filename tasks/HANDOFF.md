@@ -88,6 +88,14 @@ blocked on a provider key and the contract is not blocked on anything.
   branch `main`. Preview URL per PR, production on merge. No secrets to manage.
   Env vars set for all targets: `NEXT_PUBLIC_CELO_NETWORK=testnet`,
   `NEXT_PUBLIC_POOL_ADDRESS=0x92ca2251…de9c`.
+- **LIVE at https://escape-room-chi-five.vercel.app** (also
+  `escape-room-greyw0rks-projects.vercel.app`). Verified in production: 200, correct
+  title, `POST /api/session/start` returns the seed room, and redaction holds — no
+  `solution`/`hints`/`dependsOn`/`secrets` keys in the client payload.
+  ⚠️ Note `escape-room.vercel.app` is **someone else's p5.js project**, not ours.
+- **Vercel Deployment Protection had to be disabled.** The project defaulted to
+  `ssoProtection: all_except_custom_domains`, which 302'd every request to a Vercel
+  SSO login. In a MiniPay webview that renders as a login wall instead of the game.
 - **A GitHub Actions deploy workflow was written and then deleted.** Vercel's GitHub
   App already deploys on push, so keeping both meant two competing deploys per commit.
   See the failures log for why a token-based workflow wasn't viable.
@@ -112,6 +120,20 @@ blocked on a provider key and the contract is not blocked on anything.
       signed claim. Anti-cheat. Swap the in-memory session store for Postgres.
 - [ ] **Phase 6 — Listing surface** (task #6). Real leaderboard, `/stats` metrics, full
       ToS/Privacy, in-app support link.
+- [ ] **Visual identity + game art — NOT STARTED, and the app currently has zero images.**
+      No `public/` directory, no favicon, no app icon, no OG image, no `manifest.json`,
+      and not a single `<Image>`/`.png` reference anywhere in the codebase. The game is
+      pure text right now, which reads as a tech demo rather than a product.
+      This blocks submission on two separate fronts:
+      - **MiniPay intake form requires ≥3 screenshots**, PNG/JPG, max 500 KB each,
+        "showing the app in action" — screenshots of an all-text screen will not pass.
+      - **MiniPay requires app name + logo displayed prominently** and "clearly distinct
+        from MiniPay's own branding", so a user knows who operates the service.
+      Minimum set to build: app icon/logo, favicon, OG/social preview, and per-room
+      scene art (the seed room "The Cartographer's Study" needs a hero image plus
+      object art for the desk, globe, portrait, door and parrot).
+      Note the **2 MB MiniPay client-JS cap** is separate from image weight, but images
+      still need compressing — lazy-load and prefer WebP/AVIF with PNG fallback.
 - [ ] **Phase 7 — Mainnet + submission** (task #7).
 
 ---
@@ -211,6 +233,13 @@ blocked on a provider key and the contract is not blocked on anything.
   must be created by hand at vercel.com/account/tokens. Sidestepped entirely by using
   Vercel's GitHub App instead, which needs no token — so the Actions deploy workflow
   was deleted rather than left half-wired.
+- **2026-07-31 — New Vercel projects are SSO-protected by default.** The first
+  deployment returned **302 to `vercel.com/sso-api`**, not 200. A naive `curl -o
+  /dev/null -w %{http_code}` smoke test against the *bare* project name would also have
+  been misleading, because `escape-room.vercel.app` is an unrelated third party's
+  p5.js app that returns a healthy 200. Lesson: when smoke-testing a deploy, assert on
+  page *content* (title/markup), not just the status code, and confirm you're hitting
+  your own alias.
 
 ---
 
@@ -243,9 +272,11 @@ blocked on a provider key and the contract is not blocked on anything.
 
 ## Ideas to improve the project
 
-- **Ship the practice room publicly now.** It needs no wallet and no contract, so it can
-  gather real feedback and D1 retention data while the economy is still being built. This
-  is the single highest-leverage thing available today.
+- [x] ~~**Ship the practice room publicly now.**~~ **Done 2026-07-31** — live at
+  https://escape-room-chi-five.vercel.app, no wallet or contract needed. It can now
+  gather real feedback and D1 retention data while the economy is still being built.
+  Next step on this thread: get it in front of actual players (and add art first —
+  see the visual-identity item under "What's remaining").
 - **Localisation.** MiniPay's core markets are Nigeria, Kenya, Brazil, Colombia,
   Philippines. Puzzle text *is* the game — early i18n scaffolding is far cheaper than
   retrofitting.
