@@ -80,6 +80,24 @@ blocked on a provider key and the contract is not blocked on anything.
 - **CI now has a `contracts` job** running `forge fmt --check`, `forge build --sizes`
   and `forge test -vvv`. `forge-std` and OpenZeppelin are proper git submodules.
 
+### Landing page (2026-07-31)
+There was no landing page — `/` went straight to the room picker, so a first-time
+visitor (or a MiniPay reviewer) arrived with **no idea what the game was**.
+
+- **`/` is now a landing page**; the room picker moved to **`/play`**. Sections:
+  hero → what's in a room → how it works (3 steps) → practice vs ranked → fair play
+  → FAQ → closing CTA → footer. Structure follows Arcadia's landing page, which does
+  the same job for the same audience.
+- **Hero CTA goes straight into `/play/practice`** — free, no wallet, one tap from
+  cold visitor to actually playing the game.
+- **The FAQ answers the gambling question directly**, which matters because Proof of
+  Ship excludes gambling: fixed known entry, no wager, no odds, no randomness in the
+  split, outcome determined purely by skill. Also states plainly that we never hold
+  player funds.
+- **Footer disclaims operator identity** ("not operated by MiniPay or Celo"), which
+  MiniPay's listing rules require.
+- `/play` and `/play/[sessionId]` coexist — Next gives the static segment precedence.
+
 ### Visual identity — "Detective's Study" (2026-07-31)
 The app previously had **zero images** and read as a generic dark template. It now has
 a full design system, a logo, and hand-drawn room art.
@@ -109,11 +127,14 @@ a full design system, a logo, and hand-drawn room art.
 - **Generated, not exported:** `app/opengraph-image.tsx` and `app/manifest.ts` build the
   social card and manifest from the same tokens as the app, so they cannot drift the
   way a hand-exported PNG does.
-- **Submission screenshots** live in `docs/screenshots/` — 4 JPEGs, ~130 KB each,
+- **Submission screenshots** live in `docs/screenshots/` — 5 JPEGs, ~130 KB each,
   against MiniPay's 500 KB / ≥3 requirement.
-- **Verified at 360×640 on the production build**, all 5 routes: no horizontal
+- **Verified at 360×640 on the production build**, all 6 routes: no horizontal
   overflow, zero tap targets under 44px, no text under 11px, no console errors.
   Client JS **891 KB / 2048 KB** — the entire identity cost ~50 KB.
+- **Two tap-target regressions were caught by the audit script**, not by eye: the
+  sticky nav's Play button (38px) and the `/play` wordmark link (28px). Keep running
+  `/tmp/audit.mjs`-style checks — a 38px button looks fine in a screenshot.
 
 ### CI/CD
 - **CI** (`.github/workflows/ci.yml`) — `app` job (typecheck, vitest, build, 2 MB bundle
@@ -294,6 +315,11 @@ a full design system, a logo, and hand-drawn room art.
   useful as reference — style #71 "Modern Dark (Cinema Mobile)" informed the token
   system — but its logo/icon generators need a `GEMINI_API_KEY` that isn't configured.
   Net: the design data helped, the component/theme fetching did not.
+- **2026-07-31 — `cd` inside a Bash tool call persists across later calls.** After
+  reading Arcadia's source I ran `npm run build` and spent time debugging a `/play`
+  404 that did not exist — the build had run in `Arcadia/arcadia-frontend`, and its
+  route table (`/games`, `/tournament`) was the giveaway. Use absolute paths, and if a
+  build output looks like a different project, check `pwd` before debugging the code.
 
 ---
 
