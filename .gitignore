@@ -11,3 +11,4 @@ next-env.d.ts
 contracts/celo/out/
 contracts/celo/cache/
 contracts/celo/broadcast/
+.vercel
