@@ -5,12 +5,16 @@ import Link from "next/link";
 import type { ClientRoom } from "@/server/room";
 import type { Action } from "@/server/types";
 import { Mark } from "@/components/Brand";
-import { StudyScene, ObjectIcon } from "@/components/RoomArt";
+import { StudyScene, ObjectIcon, HOTSPOTS } from "@/components/RoomArt";
+import { Artifact, hasArtifact } from "@/components/Artifacts";
 
 interface LogLine {
   id: number;
   kind: "narration" | "player" | "system" | "win";
   text: string;
+  /** Set when this line came from examining something that has prop art, so
+   *  the player can tap back into the close-up later. */
+  artifactId?: string;
 }
 
 interface Score {
@@ -32,13 +36,21 @@ export default function RoomClient({ mode }: { mode: "practice" | "ranked" }) {
   const [remaining, setRemaining] = useState(0);
   const [score, setScore] = useState<Score | null>(null);
   const [busy, setBusy] = useState(false);
+  /** Object whose prop is open full-screen. */
+  const [viewing, setViewing] = useState<string | null>(null);
+  /** Objects the player has examined at least once — drives the scene marks. */
+  const [seen, setSeen] = useState<Set<string>>(new Set());
 
-  const logEndRef = useRef<HTMLDivElement>(null);
+  const capEndRef = useRef<HTMLDivElement>(null);
   const nextLogId = useRef(0);
+  const pendingArtifact = useRef<string | null>(null);
 
-  const addLog = useCallback((kind: LogLine["kind"], text: string) => {
-    setLog((prev) => [...prev, { id: nextLogId.current++, kind, text }]);
-  }, []);
+  const addLog = useCallback(
+    (kind: LogLine["kind"], text: string, artifactId?: string) => {
+      setLog((prev) => [...prev, { id: nextLogId.current++, kind, text, artifactId }]);
+    },
+    []
+  );
 
   // Open the run on mount.
   useEffect(() => {
@@ -66,13 +78,20 @@ export default function RoomClient({ mode }: { mode: "practice" | "ranked" }) {
     return () => clearInterval(t);
   }, [score, remaining]);
 
-  // Follow the log as it grows — but not on the very first line. Scrolling
-  // the intro out of view before the player has read it loses the only text
-  // that establishes where they are.
+  // Follow the caption as it grows, but not on the very first line — scrolling
+  // the intro away before it is read loses the only text that sets the scene.
   useEffect(() => {
     if (log.length <= 1) return;
-    logEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    capEndRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
   }, [log]);
+
+  // Close the prop viewer with Escape, which is what every player will try.
+  useEffect(() => {
+    if (!viewing) return;
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setViewing(null);
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [viewing]);
 
   const send = useCallback(
     async (payload: Record<string, unknown>) => {
@@ -91,7 +110,14 @@ export default function RoomClient({ mode }: { mode: "practice" | "ranked" }) {
           setRemaining(data.room.timeRemainingSec);
         }
         if (data.outcome) {
-          addLog(data.outcome.escaped ? "win" : "narration", data.outcome.text);
+          const art = pendingArtifact.current;
+          addLog(
+            data.outcome.escaped ? "win" : "narration",
+            data.outcome.text,
+            art ?? undefined
+          );
+          // Showing the prop is the payoff for searching, so it opens itself.
+          if (art) setViewing(art);
           for (const item of data.outcome.itemsGained ?? []) {
             const name = data.room?.inventory.find(
               (i: { id: string; name: string }) => i.id === item
@@ -99,10 +125,11 @@ export default function RoomClient({ mode }: { mode: "practice" | "ranked" }) {
             if (name) addLog("system", `Taken: ${name}`);
           }
         }
-        if (data.hint?.ok) addLog("system", `Hint: ${data.hint.text}`);
+        if (data.hint?.ok) addLog("system", data.hint.text);
         if (data.hint && !data.hint.ok) addLog("system", "No hint available right now.");
         if (data.score) setScore(data.score);
       } finally {
+        pendingArtifact.current = null;
         setBusy(false);
       }
     },
@@ -112,6 +139,12 @@ export default function RoomClient({ mode }: { mode: "practice" | "ranked" }) {
   const doAction = (objectId: string, action: Action, label: string) => {
     addLog("player", label);
     setSelected(null);
+    setSeen((prev) => new Set(prev).add(objectId));
+    // Only close-up actions produce a prop — taking or pushing something does not.
+    pendingArtifact.current =
+      hasArtifact(objectId) && (action === "inspect" || action === "read" || action === "rotate")
+        ? objectId
+        : null;
     void send({ kind: "action", objectId, action });
   };
 
@@ -133,9 +166,7 @@ export default function RoomClient({ mode }: { mode: "practice" | "ranked" }) {
   if (!room) {
     return (
       <div className="loading" role="status" aria-live="polite">
-        <div className="loading-lamp">
-          <Mark size={64} />
-        </div>
+        <Mark size={56} />
         <p className="label">Unlocking the room</p>
         <div className="loading-bar">
           <span />
@@ -147,16 +178,16 @@ export default function RoomClient({ mode }: { mode: "practice" | "ranked" }) {
   const mins = Math.floor(remaining / 60);
   const secs = remaining % 60;
   const low = remaining <= 60;
-
   const selectedObject = room.objects.find((o) => o.id === selected);
+  const viewingObject = room.objects.find((o) => o.id === viewing);
 
   return (
     <main className="room">
       <header className="room-bar">
-        <Link href="/" className="nav-link" aria-label="Leave room">
+        <Link href="/play" className="nav-link" aria-label="Leave room">
           ←
         </Link>
-        <span className="pill">{mode === "ranked" ? "Ranked" : "Practice"}</span>
+        <span className="room-title">{room.title}</span>
         <span
           className={`mono room-clock${low ? " room-clock-low" : ""}`}
           aria-label="Time remaining"
@@ -176,20 +207,58 @@ export default function RoomClient({ mode }: { mode: "practice" | "ranked" }) {
         <div style={{ width: `${Math.round(room.progress * 100)}%` }} />
       </div>
 
-      {/* A thin strip of the room, so the player is looking *at* somewhere
-          rather than reading a transcript on a blank screen. */}
-      <div className="room-scene">
-        <StudyScene className="scene" />
-        <div className="room-scene-fade" />
+      {/* The room itself. You tap the thing, not a list of its name. */}
+      <div className="room-stage">
+        <StudyScene />
+        {room.objects.map((o) => {
+          const at = HOTSPOTS[o.id];
+          if (!at) return null;
+          const done = seen.has(o.id);
+          return (
+            <button
+              key={o.id}
+              className={`hotspot${done ? " hotspot-done" : " hotspot-live"}`}
+              style={{ left: `${at.x}%`, top: `${at.y}%`, transform: "translate(-50%, -50%)" }}
+              onClick={() => setSelected(o.id)}
+              aria-label={done ? o.name : `Something here — ${o.name}`}
+            >
+              <span className="hotspot-ring" aria-hidden>
+                {done ? "" : "+"}
+              </span>
+              {done && <span className="hotspot-tag">{o.name}</span>}
+            </button>
+          );
+        })}
       </div>
 
-      <section className="room-log" aria-live="polite">
-        {log.map((line) => (
-          <p key={line.id} className={`log log-${line.kind}`}>
-            {line.text}
-          </p>
+      {/* What you just found. Short, and never a scrolling transcript. */}
+      <section className="room-caption" aria-live="polite">
+        {log.slice(-3).map((line) => (
+          <div key={line.id}>
+            <p
+              className={`caption-line${
+                line.kind === "player"
+                  ? " caption-said"
+                  : line.kind === "system"
+                    ? " caption-note"
+                    : line.kind === "win"
+                      ? " caption-win"
+                      : ""
+              }`}
+            >
+              {line.text}
+            </p>
+            {line.artifactId && (
+              <button className="thumb" onClick={() => setViewing(line.artifactId!)}>
+                <span className="thumb-art" aria-hidden>
+                  <Artifact id={line.artifactId} />
+                </span>
+                <span>Look closer</span>
+              </button>
+            )}
+          </div>
         ))}
-        <div ref={logEndRef} />
+        <div ref={capEndRef} />
       </section>
 
       {score ? (
@@ -217,7 +286,7 @@ export default function RoomClient({ mode }: { mode: "practice" | "ranked" }) {
               <span className="mono">{score.wrongAttempts}</span>
             </div>
           </div>
-          <Link href="/" className="btn btn-primary btn-block">
+          <Link href="/play" className="btn btn-primary btn-block">
             Back to lobby
           </Link>
         </section>
@@ -272,7 +341,7 @@ export default function RoomClient({ mode }: { mode: "practice" | "ranked" }) {
             <div className="stack-sm">
               <div className="row-between">
                 <span className="row" style={{ gap: 8 }}>
-                  <ObjectIcon id={selectedObject.id} size={20} />
+                  <ObjectIcon id={selectedObject.id} size={18} />
                   <strong>{selectedObject.name}</strong>
                 </span>
                 <button className="btn btn-ghost" onClick={() => setSelected(null)}>
@@ -283,7 +352,7 @@ export default function RoomClient({ mode }: { mode: "practice" | "ranked" }) {
                 {selectedObject.actions.map((action) => (
                   <button
                     key={action}
-                    className="chip chip-action"
+                    className="chip"
                     disabled={busy}
                     onClick={() => {
                       if (action === "talk") {
@@ -307,39 +376,57 @@ export default function RoomClient({ mode }: { mode: "practice" | "ranked" }) {
               </div>
             </div>
           ) : (
-            <div className="stack-sm">
-              <div className="chip-row">
-                {room.objects.map((o) => (
-                  <button key={o.id} className="chip" onClick={() => setSelected(o.id)}>
-                    <ObjectIcon id={o.id} size={18} />
-                    {o.name}
-                  </button>
-                ))}
+            <div className="row-between">
+              <div className="chip-row grow">
+                {room.inventory.length === 0 ? (
+                  <span className="faint">Tap anything in the room</span>
+                ) : (
+                  room.inventory.map((i) => (
+                    <span key={i.id} className="chip-item" title={i.description}>
+                      {i.name}
+                    </span>
+                  ))
+                )}
               </div>
-              <hr className="rule" />
-              <div className="row-between">
-                <div className="chip-row grow">
-                  {room.inventory.length === 0 ? (
-                    <span className="faint">Nothing in hand</span>
-                  ) : (
-                    room.inventory.map((i) => (
-                      <span key={i.id} className="chip chip-item" title={i.description}>
-                        {i.name}
-                      </span>
-                    ))
-                  )}
-                </div>
-                <button
-                  className="btn btn-ghost"
-                  disabled={busy}
-                  onClick={() => void send({ kind: "hint" })}
-                >
-                  Hint
-                </button>
-              </div>
+              <button
+                className="btn btn-ghost"
+                disabled={busy}
+                onClick={() => void send({ kind: "hint" })}
+              >
+                Hint
+              </button>
             </div>
           )}
         </section>
+      )}
+
+      {/* The close-up. This is the payoff for searching: you get to actually
+          look at the thing, not read a sentence about it. */}
+      {viewing && (
+        <div
+          className="artifact"
+          role="dialog"
+          aria-modal="true"
+          aria-label={viewingObject?.name ?? "Item"}
+          onClick={() => setViewing(null)}
+        >
+          <div className="artifact-sheet" onClick={(e) => e.stopPropagation()}>
+            <div className="artifact-bar">
+              <span className="artifact-title">{viewingObject?.name ?? "Item"}</span>
+              <button className="artifact-close" onClick={() => setViewing(null)} aria-label="Close">
+                ✕
+              </button>
+            </div>
+            <div className="artifact-paper">
+              <Artifact id={viewing} />
+            </div>
+            <div className="artifact-actions">
+              <button className="btn btn-block" onClick={() => setViewing(null)}>
+                Put it back
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </main>
   );

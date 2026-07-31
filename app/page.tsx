@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { Wordmark } from "@/components/Brand";
+import { TabBar } from "@/components/TabBar";
 import { StudyScene, ObjectIcon } from "@/components/RoomArt";
 
 /**
@@ -77,15 +78,14 @@ export default function Landing() {
       <section className="lp-hero">
         <div className="lp-hero-art" aria-hidden="true">
           <StudyScene className="scene" />
-          <div className="lp-hero-fade" />
-        </div>
+          </div>
 
         <div className="lp-hero-body stack">
-          <span className="pill pill-amber pill-live">A new room every day</span>
+          <span className="pill pill-red pill-live">A new room every day</span>
           <h1 className="lp-title">
             You have eight minutes
             <br />
-            <span className="lp-title-lit">to get out.</span>
+            <span style={{ color: "var(--cream)" }}>to get out.</span>
           </h1>
           <p className="lp-sub">
             An escape room you play on your phone. Search it, question whoever is inside,
@@ -106,16 +106,20 @@ export default function Landing() {
       {/* WHAT'S IN A ROOM */}
       <section className="lp-section">
         <p className="label">What is in a room</p>
-        <h2 className="lp-h2">Everything you need is already in there.</h2>
+        <h2 className="sec-title" style={{ fontSize: "var(--fs-xl)", marginBottom: "var(--space-2)" }}>Everything you need is already in there.</h2>
         <p className="muted">
           No outside knowledge, no trivia, no guessing. Every room is solvable from what
           you can see and who you can talk to.
         </p>
-        <ul className="lp-grid">
+        <ul className="tiles" style={{ marginTop: "var(--space-5)" }}>
           {THINGS.map((t) => (
-            <li key={t.id} className="lp-tile">
-              <ObjectIcon id={t.id} size={26} />
-              <span>{t.label}</span>
+            <li key={t.id}>
+              <div className="tile-art" style={{ display: "grid", placeItems: "center" }}>
+                <span style={{ color: "#1a1a1a", display: "flex" }}>
+                  <ObjectIcon id={t.id} size={44} />
+                </span>
+              </div>
+              <span className="tile-label">{t.label}</span>
             </li>
           ))}
         </ul>
@@ -124,7 +128,7 @@ export default function Landing() {
       {/* HOW IT WORKS */}
       <section className="lp-section lp-section-alt" id="how">
         <p className="label">How it works</p>
-        <h2 className="lp-h2">Three things to do.</h2>
+        <h2 className="sec-title" style={{ fontSize: "var(--fs-xl)", marginBottom: "var(--space-2)" }}>Three things to do.</h2>
         <ol className="lp-steps">
           {STEPS.map((s) => (
             <li key={s.n}>
@@ -141,7 +145,7 @@ export default function Landing() {
       {/* MODES */}
       <section className="lp-section">
         <p className="label">Two ways to play</p>
-        <h2 className="lp-h2">Practice free, or play for the pot.</h2>
+        <h2 className="sec-title" style={{ fontSize: "var(--fs-xl)", marginBottom: "var(--space-2)" }}>Practice free, or play for the pot.</h2>
 
         <div className="lp-modes">
           <div className="card stack-sm">
@@ -161,7 +165,7 @@ export default function Landing() {
           <div className="card-lit stack-sm">
             <div className="row-between" style={{ alignItems: "flex-start" }}>
               <h3>Ranked</h3>
-              <span className="pill pill-amber">Daily pot</span>
+              <span className="pill pill-red">Daily pot</span>
             </div>
             <p className="muted">
               One attempt. A fixed entry fee in a stablecoin goes into the day&apos;s
@@ -177,7 +181,7 @@ export default function Landing() {
       {/* FAIR PLAY */}
       <section className="lp-section lp-section-alt">
         <p className="label">Fair play</p>
-        <h2 className="lp-h2">Skill decides it. Not chance.</h2>
+        <h2 className="sec-title" style={{ fontSize: "var(--fs-xl)", marginBottom: "var(--space-2)" }}>Skill decides it. Not chance.</h2>
         <p className="muted">
           Entry is a fixed, known amount. There is no wager, no odds and no randomness in
           how the pot is divided — two players who solve the room identically score
@@ -193,7 +197,7 @@ export default function Landing() {
             "Solver-checked",
             "Open source",
           ].map((p) => (
-            <span key={p} className="chip-item">
+            <span key={p} className="pill">
               {p}
             </span>
           ))}
@@ -203,7 +207,7 @@ export default function Landing() {
       {/* FAQ */}
       <section className="lp-section">
         <p className="label">Questions</p>
-        <h2 className="lp-h2">Before you start.</h2>
+        <h2 className="sec-title" style={{ fontSize: "var(--fs-xl)", marginBottom: "var(--space-2)" }}>Before you start.</h2>
         <div className="lp-faq">
           {FAQ.map((f, i) => (
             <div key={f.q}>
@@ -225,7 +229,7 @@ export default function Landing() {
 
       {/* CLOSING CTA */}
       <section className="lp-close">
-        <h2 className="lp-h2">Today&apos;s room is open.</h2>
+        <h2 className="sec-title" style={{ fontSize: "var(--fs-xl)", marginBottom: "var(--space-2)" }}>Today&apos;s room is open.</h2>
         <p className="muted">Eight minutes. See if you get out.</p>
         <Link href="/play/practice" className="btn btn-primary btn-block">
           Play free practice run

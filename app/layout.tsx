@@ -2,14 +2,15 @@ import type { Metadata, Viewport } from "next";
 import { Fraunces, Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 
-// Three voices, strictly separated — see globals.css.
-// `display: swap` so the room's text is readable before the fonts land;
-// on a 2G MiniPay connection a blocking font would mean a blank screen.
+// Serif display over sans body, per heal-grow-ui-spec.md — the split is what
+// makes the layout read as editorial rather than as an app template.
+// `display: swap` so text is readable before the fonts land; on a 2G MiniPay
+// connection a blocking font would mean a blank screen.
 const display = Fraunces({
   subsets: ["latin"],
   display: "swap",
   variable: "--font-display",
-  axes: ["SOFT", "WONK", "opsz"],
+  weight: ["400", "500"],
 });
 
 const body = Inter({
@@ -56,7 +57,7 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   maximumScale: 1,
-  themeColor: "#0a0810",
+  themeColor: "#1a1a1a",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
