@@ -844,6 +844,203 @@ h3 {
   letter-spacing: -0.01em;
 }
 
+/* --- Landing page --------------------------------------------------------
+   The one screen a cold visitor or a MiniPay reviewer sees first. It runs
+   full-bleed and alternates surface tone by section so a long scroll has
+   rhythm instead of turning into one undifferentiated column. */
+
+.lp-nav {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-5);
+  background: rgba(10, 8, 16, 0.82);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--line);
+}
+
+/* Compact, but never below the 44px thumb-target floor — a sticky header is
+   exactly where a mis-tap is most annoying. */
+.lp-nav-cta {
+  padding: 0 var(--space-4);
+  font-size: var(--fs-sm);
+}
+
+.lp-hero {
+  position: relative;
+  padding: 0 0 var(--space-7);
+}
+
+.lp-hero-art {
+  position: relative;
+  height: 190px;
+}
+
+/* The art fades into the page rather than ending on a hard edge, so the hero
+   copy reads as sitting *inside* the room. */
+.lp-hero-fade {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, transparent 20%, var(--ink-900) 97%);
+}
+
+.lp-hero-body {
+  position: relative;
+  margin-top: -48px;
+  padding: 0 var(--space-5);
+  align-items: flex-start;
+}
+
+.lp-title {
+  font-size: var(--fs-2xl);
+  line-height: 1.14;
+  letter-spacing: -0.03em;
+}
+
+/* The only lit words on the page. */
+.lp-title-lit {
+  color: var(--amber-bright);
+}
+
+.lp-sub {
+  color: var(--paper-dim);
+  font-size: var(--fs-md);
+  line-height: 1.6;
+}
+
+.lp-section {
+  padding: var(--space-7) var(--space-5);
+  border-top: 1px solid var(--line);
+}
+
+.lp-section-alt {
+  background: linear-gradient(180deg, var(--ink-800), var(--ink-900));
+}
+
+.lp-h2 {
+  font-size: var(--fs-xl);
+  margin: var(--space-2) 0 var(--space-3);
+}
+
+/* Two columns even at 360px — six single-file rows would push the rest of the
+   page below any reasonable scroll. */
+.lp-grid {
+  list-style: none;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-2);
+  margin-top: var(--space-5);
+}
+
+.lp-tile {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-4);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: linear-gradient(180deg, var(--ink-700), var(--ink-800));
+  font-size: var(--fs-sm);
+  color: var(--paper-dim);
+  line-height: 1.35;
+}
+
+.lp-tile svg {
+  color: var(--amber);
+  opacity: 0.8;
+}
+
+.lp-steps {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  margin-top: var(--space-5);
+}
+
+.lp-steps li {
+  display: flex;
+  gap: var(--space-4);
+}
+
+.lp-step-n {
+  color: var(--amber);
+  font-size: var(--fs-sm);
+  letter-spacing: 0.1em;
+  padding-top: 3px;
+  flex-shrink: 0;
+}
+
+.lp-step-title {
+  font-size: var(--fs-lg);
+  margin-bottom: var(--space-1);
+}
+
+.lp-modes {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  margin-top: var(--space-5);
+}
+
+.lp-faq {
+  display: flex;
+  flex-direction: column;
+  margin-top: var(--space-4);
+}
+
+.lp-faq > div {
+  border-bottom: 1px solid var(--line);
+}
+
+/* A question is a question, not a headline — it stays in the body face and
+   wraps rather than being clipped by the +/x affordance. */
+.lp-faq-q {
+  font-family: var(--font-body), sans-serif;
+  font-size: var(--fs-base);
+  font-weight: 550;
+  text-align: left;
+  line-height: 1.4;
+  padding: var(--space-3) 0;
+}
+
+.lp-faq-a {
+  padding-bottom: var(--space-4);
+  font-size: var(--fs-sm);
+  line-height: 1.65;
+  animation: rise var(--slow) var(--ease);
+}
+
+.lp-close {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-8) var(--space-5);
+  text-align: center;
+  border-top: 1px solid var(--line-amber);
+  background:
+    radial-gradient(90% 120% at 50% 0%, var(--amber-glow), transparent 66%),
+    var(--ink-900);
+}
+
+.lp-close .btn {
+  margin-top: var(--space-2);
+}
+
+.lp-footer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-6) var(--space-5) var(--space-7);
+  border-top: 1px solid var(--line);
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
