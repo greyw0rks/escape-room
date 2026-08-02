@@ -1,7 +1,7 @@
 # Handoff — AI Escape Room (Celo MiniPay Mini App)
 
 ## Status snapshot
-Last updated: 2026-08-01
+Last updated: 2026-08-02
 Repo: `/home/greyw0rks/escape-room/` — **public at https://github.com/greyw0rks/escape-room**
 Plan: `/home/greyw0rks/.claude/plans/witty-scribbling-noodle.md`
 Target: **Celo Proof of Ship** monthly sprint → **MiniPay Discovery listing**
@@ -146,6 +146,27 @@ The room was a chat log with a row of buttons. It is now a place you look at.
   six verbs render, so edge objects (wall map, study door) clipped outside the
   art. It flips above the hotspot when opening below would overflow. Verified
   across all 7 hotspots at 360×640 and 412×915 — max travel now 151px.
+- **Desktop layout** (2026-08-02). The app is no longer mobile-only: from
+  `min-width: 900px` the shell widens to 1120px (1320px on the room, via
+  `.app-shell:has(.room)`), the room becomes a two-pane grid with the art left
+  and caption/actions right, the landing sections reflow to multi-column, and
+  the bottom tab bar moves to the top. Mobile is untouched — every rule is
+  inside a `min-width` or `hover` query, and the 360×640 screenshots are
+  byte-identical to the pre-change baseline on 4 of 5 routes (the 5th differs
+  only by animation/encoder noise, confirmed by diffing two runs of the *same*
+  build).
+- **The room stage must stay pinned to `aspect-ratio: 400 / 340`.** The scene
+  SVG is `xMidYMid meet`, but hotspots are positioned as a percentage of the
+  **stage**, not the art. Any stage wider than the art's ratio letterboxes the
+  drawing and strands hotspots off it — measured at 1440px, **3 of 7 ended up
+  outside the artwork**. Do not give `.room-stage` a free-form width or height
+  on desktop. Note `height: 100%` silently defeats `aspect-ratio` in a grid
+  cell; use `width: 100%; height: auto; max-height: 100%`.
+- Desktop hover affordances live in `@media (hover: hover) and (pointer: fine)`
+  so a tap never leaves a hover state stuck on. The hotspot ring scaling on
+  hover is the only cue a mouse user gets that a hotspot is live; it
+  deliberately does not reveal the object's name, since finding things is the
+  game.
 
 ### CI/CD
 - **CI** (`.github/workflows/ci.yml`) — `app` job (typecheck, vitest, build, 2 MB bundle
@@ -368,6 +389,21 @@ There is **no Playwright in this repo**, but a chromium binary is already cached
   pass sampled 3 of 7 hotspots and reported "placement works". Driving *all* hotspots
   at two viewports is what surfaced the left-clip and bottom-overflow. For anything
   positioned relative to variable anchors, iterate every anchor.
+- **2026-08-02 — `height: 100%` silently defeats `aspect-ratio`.** The first desktop
+  room grid set `aspect-ratio: 400 / 340` *and* `height: 100%` on `.room-stage`. The
+  explicit height wins, so the stage stayed the wrong shape and the art letterboxed
+  by 123px — the aspect-ratio looked applied but did nothing. `width: 100%;
+  height: auto; max-height: 100%` is what actually holds the ratio in a grid cell.
+- **2026-08-02 — "Screenshot differs" is not proof of a regression.** The mobile
+  landing PNG differed from its baseline by 2 bytes after the desktop change. Two
+  runs of the *unchanged* build differed by the same amount — the page animates, so
+  the capture is not deterministic. Before chasing a pixel diff, re-shoot the same
+  build twice to establish the noise floor.
+- **2026-08-02 — Capping a measure with `max-width` + `margin-inline: auto` centres
+  the text away from its own heading.** Applied to `.lp-section > *`, the 62ch prose
+  ended up horizontally centred in a 1040px column while its `h2` started at the left
+  edge. Cap the section's *padding* instead: `padding-inline: max(pad, (100% - cap)/2)`
+  keeps children left-aligned and the band full-bleed.
 
 ---
 

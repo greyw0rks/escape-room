@@ -33,7 +33,7 @@ export default function Play() {
   return (
     <>
       <main
-        className="stack-lg"
+        className="stack-lg page-narrow"
         style={{ padding: "var(--space-5) var(--space-5) var(--space-6)" }}
       >
         <header className="row-between rise" style={{ "--i": 0 } as React.CSSProperties}>

@@ -4,7 +4,7 @@ export const metadata = { title: "Stats — Escape" };
 
 export default function Stats() {
   return (
-    <main className="stack pad" style={{ paddingTop: "var(--space-6)" }}>
+    <main className="stack pad page-narrow" style={{ paddingTop: "var(--space-6)" }}>
       <Link href="/" className="nav-link">
         ← Back
       </Link>
