@@ -17,7 +17,9 @@ pragma solidity ^0.8.24;
 //    checks the day's remaining balance on-chain. A bad signer can misallocate a
 //    day's pool, but can never mint value or touch another day.
 //  • No `personal_sign` anywhere — MiniPay does not support it. The player's only
-//    transactions are `enterRoom` and `claim`.
+//    transactions are `checkIn`, `enterRoom` and `claim`.
+//  • `checkIn` is the free path: it moves no tokens and touches no accounting, so
+//    it can never affect pool solvency.
 // ─────────────────────────────────────────────────────────────────────────────
 
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
@@ -70,6 +72,11 @@ contract DailyRoomPool is Ownable, Pausable, ReentrancyGuard, EIP712 {
     mapping(uint32 => mapping(address => mapping(address => bool))) public entered;
     mapping(uint32 => mapping(address => mapping(address => bool))) public claimed;
 
+    /// One free check-in per wallet per day. Not keyed by token: a check-in
+    /// registers the wallet for the day's room, it does not buy into a pool.
+    mapping(uint32 => mapping(address => bool)) public checkedIn;
+    mapping(uint32 => uint32) public checkIns;
+
     /// Accumulated platform fees, withdrawable by the owner.
     mapping(address => uint256) public treasury;
 
@@ -79,6 +86,7 @@ contract DailyRoomPool is Ownable, Pausable, ReentrancyGuard, EIP712 {
     error TokenNotEnabled(address token);
     error EntryFeeNotSet(uint32 dayId, address token);
     error AlreadyEntered();
+    error AlreadyCheckedIn();
     error AlreadyClaimed();
     error BadSignature();
     error ZeroClaim();
@@ -100,6 +108,9 @@ contract DailyRoomPool is Ownable, Pausable, ReentrancyGuard, EIP712 {
     );
     /// Emitted separately so protocol revenue is summable without parsing entries.
     event FeeCollected(uint32 indexed dayId, address indexed token, uint256 amount);
+    /// The on-chain proof that a wallet opened a day's room. Indexed so the
+    /// backend and the stats page can count distinct wallets per day.
+    event CheckedIn(uint32 indexed dayId, address indexed player, uint64 at);
     event Claimed(
         uint32 indexed dayId, address indexed player, address indexed token, uint256 amount
     );
@@ -121,6 +132,33 @@ contract DailyRoomPool is Ownable, Pausable, ReentrancyGuard, EIP712 {
         trustedSigner = signer_;
         rakeBps = rakeBps_;
         claimWindow = claimWindow_;
+    }
+
+    // ── Check-in ─────────────────────────────────────────────────────────────
+
+    /**
+     * @notice Register for a day's room. Free — no tokens move, and the player
+     *         pays only the network fee.
+     * @dev This is the app's proof of wallet ownership. MiniPay supports neither
+     *      `personal_sign` nor `eth_signTypedData`, so a transaction is the only
+     *      way a player can demonstrate they control an address — `msg.sender`
+     *      is the proof. It is also what opens their ranked attempt for the day,
+     *      so the on-chain record is a byproduct of a real action rather than an
+     *      end in itself.
+     *
+     *      Deliberately not `nonReentrant`: there is no external call and no
+     *      token transfer here, so there is nothing to re-enter. It *is*
+     *      `whenNotPaused`, because pausing must stop new players arriving and
+     *      this is now an entry path. (`claim` stays unpausable — winnings must
+     *      always be withdrawable — but a check-in is not a withdrawal.)
+     */
+    function checkIn(uint32 dayId) external whenNotPaused {
+        if (checkedIn[dayId][msg.sender]) revert AlreadyCheckedIn();
+
+        checkedIn[dayId][msg.sender] = true;
+        checkIns[dayId] += 1;
+
+        emit CheckedIn(dayId, msg.sender, uint64(block.timestamp));
     }
 
     // ── Entry ────────────────────────────────────────────────────────────────
@@ -274,6 +312,10 @@ contract DailyRoomPool is Ownable, Pausable, ReentrancyGuard, EIP712 {
 
     function hasEntered(uint32 dayId, address token, address player) external view returns (bool) {
         return entered[dayId][token][player];
+    }
+
+    function hasCheckedIn(uint32 dayId, address player) external view returns (bool) {
+        return checkedIn[dayId][player];
     }
 
     function hasClaimed(uint32 dayId, address token, address player) external view returns (bool) {

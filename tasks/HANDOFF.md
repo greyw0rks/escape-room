@@ -1,7 +1,7 @@
 # Handoff — AI Escape Room (Celo MiniPay Mini App)
 
 ## Status snapshot
-Last updated: 2026-08-01
+Last updated: 2026-08-02
 Repo: `/home/greyw0rks/escape-room/` — **public at https://github.com/greyw0rks/escape-room**
 Plan: `/home/greyw0rks/.claude/plans/witty-scribbling-noodle.md`
 Target: **Celo Proof of Ship** monthly sprint → **MiniPay Discovery listing**
@@ -72,8 +72,28 @@ blocked on a provider key and the contract is not blocked on anything.
   balance on-chain. A compromised signer can misallocate one day's pool but can never
   mint value or reach another day.
 - **Pausing never blocks claims** — earned winnings must always be withdrawable.
-- **30 Foundry tests including 2 fuzz suites.** Proven non-vacuous by mutation
-  testing: deleting the overdraw guard fails exactly the 3 tests that assert it.
+- **40 Foundry tests including 3 fuzz suites.** Proven non-vacuous by mutation
+  testing: deleting the overdraw guard fails exactly the 3 tests that assert it,
+  and removing either the `checkIn` dedupe guard or its `whenNotPaused` fails
+  exactly the one test that asserts each.
+- **`checkIn(uint32 dayId)` — the free entry path (2026-08-02).** A token-free
+  transaction that registers a wallet for the day's room. It exists because
+  MiniPay supports neither `personal_sign` nor `eth_signTypedData`, so a
+  transaction is the *only* way a player can prove they control an address —
+  `msg.sender` is the proof. It moves no tokens and touches no pool, treasury or
+  entry accounting, so it cannot affect solvency (asserted directly, plus a fuzz
+  suite over arbitrary dayIds and up to 32 wallets).
+  - **The player signs it from their own wallet — never a relayer.** A relayer
+    would make `msg.sender` the backend, destroying the ownership proof and
+    attributing every transaction to one address.
+  - **It must stay load-bearing.** Proof of Ship scores "real on-chain fees paid
+    by real users" and flags farming; a transaction whose only output is a metric
+    is exactly what that penalises. Check-in is what opens the ranked attempt, so
+    the on-chain record is a byproduct of a real action. **Do not build
+    streak-farming UI on it** — the reward for checking in is playing the room.
+  - `whenNotPaused` (it is an entry path) but deliberately **not** `nonReentrant`
+    (no external call, nothing to re-enter).
+  - **Not yet on-chain.** The live contract is immutable, so this needs a redeploy.
 - **`script/Deploy.s.sol`** hardcodes token addresses per chain id (a mistyped env var
   cannot enable a nonexistent token) and refuses to deploy if signer == owner.
   Simulated against live Sepolia: ~0.26 CELO to deploy and enable all three tokens.
@@ -185,6 +205,12 @@ The room was a chat log with a row of buttons. It is now a place you look at.
       offline fallback. Then nightly room generation + the solvability validator.
 - [ ] **Phase 5 — Ranked loop** (task #5). Entry → session → server scoring → day close →
       signed claim. Anti-cheat. Swap the in-memory session store for Postgres.
+- [ ] **Wire `checkIn` end to end.** Two steps, in order: (1) **redeploy to Celo
+      Sepolia** — the live contract is immutable so `checkIn` does not exist on-chain
+      yet, and the new address goes in `lib/contract.ts`; (2) frontend — check-in
+      button on `/play` via the existing viem client in `lib/wallet.ts` (legacy tx,
+      no custom `feeCurrency`, per `lib/minipay.ts`), and a `hasCheckedIn` gate in
+      `app/api/session/start/route.ts` before a ranked session opens.
 - [ ] **Phase 6 — Listing surface** (task #6). Real leaderboard, `/stats` metrics, full
       ToS/Privacy, in-app support link.
 - [x] ~~**Visual identity + game art**~~ — **done 2026-07-31.** See "Visual identity" above.
@@ -380,6 +406,14 @@ There is **no Playwright in this repo**, but a chromium binary is already cached
 - **Signing claims that exceed the day's pool.** `splitPool` is tested to sum exactly, but
   the on-chain `claim` must *also* revert on overdraw. Never trust one layer.
 - **AI cost overrun.** Instrument cost-per-session from day one and cap turns per run.
+- **Activity farming.** A tempting-but-wrong reading of Proof of Ship is "get users to
+  send lots of cheap transactions and the leaderboard rewards it". The rubric
+  (celopedia `references/proof-of-ship.md:121,135`) says the opposite: it combines
+  Talent Protocol's on-chain score with a quality review and states you "cannot game
+  one without the other" — strong on-chain activity with a weak product is *penalised*.
+  What counts is "real on-chain fees paid by real users". So every player transaction
+  we add must do a real job in the product. `checkIn` qualifies because it opens the
+  ranked attempt; a bare streak-badge transaction would not.
 - **Gambling framing.** Proof of Ship explicitly excludes gambling. Defence: fixed entry,
   no randomness in the payout split, skill-based outcome. Keep the mechanic *and the copy*
   on skill framing.
