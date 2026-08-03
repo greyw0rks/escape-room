@@ -18,30 +18,23 @@ export default async function OpenGraphImage() {
           flexDirection: "column",
           justifyContent: "center",
           padding: 84,
-          background: "#0a0810",
+          background: "#a8d8f0",
           backgroundImage:
-            "radial-gradient(1000px 600px at 22% -10%, rgba(240,168,72,0.30), transparent 70%)",
-          color: "#f2ece2",
-          fontFamily: "Georgia, serif",
+            "linear-gradient(180deg, #a8d8f0 0%, #a8d8f0 46%, #f5f5f0 46%, #f5f5f0 100%)",
+          color: "#111111",
+          fontFamily: "monospace",
         }}
       >
         <div style={{ display: "flex", alignItems: "center", gap: 22 }}>
           <svg width="72" height="72" viewBox="0 0 64 64">
-            <rect width="64" height="64" rx="12" fill="#1f1a2b" />
-            <rect
-              x="0.75"
-              y="0.75"
-              width="62.5"
-              height="62.5"
-              rx="11.25"
-              fill="none"
-              stroke="#f0a848"
-              strokeOpacity="0.34"
-            />
-            <path d="M32 24 L46 55 H18 Z" fill="#f0a848" opacity="0.16" />
+            <rect width="64" height="64" fill="#ffd83d" />
             <path
-              d="M32 17.5a8 8 0 0 0-4.2 14.8L24.5 46h15l-3.3-13.7A8 8 0 0 0 32 17.5z"
-              fill="#f0a848"
+              d="M0 0h64v4H0zM0 60h64v4H0zM0 0h4v64H0zM60 0h4v64h-4z"
+              fill="#111111"
+            />
+            <path
+              d="M24 16h16v4H24zM20 20h24v4H20zM20 24h24v4H20zM20 28h24v4H20zM24 32h16v4H24zM28 36h8v4h-8zM24 40h16v4H24zM20 44h24v4H20z"
+              fill="#111111"
             />
           </svg>
           <span style={{ fontSize: 40, letterSpacing: 12, textTransform: "uppercase" }}>
@@ -58,7 +51,7 @@ export default async function OpenGraphImage() {
             display: "flex",
             flexDirection: "column",
             fontSize: 34,
-            color: "#a89fb4",
+            color: "#4a4a4a",
             marginTop: 26,
             lineHeight: 1.4,
           }}
@@ -71,9 +64,10 @@ export default async function OpenGraphImage() {
           style={{
             display: "flex",
             marginTop: 46,
-            height: 4,
+            height: 8,
             width: 260,
-            background: "linear-gradient(90deg,#8a5f24,#ffc677)",
+            background: "#ffd83d",
+            border: "1px solid #111111",
           }}
         />
       </div>

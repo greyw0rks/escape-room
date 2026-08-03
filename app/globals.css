@@ -972,7 +972,7 @@ h3 {
   padding: 0;
   background: transparent;
   border: 0;
-  color: #1a1a1a;
+  color: var(--text);
   font-family: inherit;
   cursor: pointer;
   transition: transform var(--fast) var(--ease);
@@ -1492,7 +1492,7 @@ h3 {
 .verb:active {
   transform: scale(0.96);
   background: var(--text);
-  color: #1a1a1a;
+  color: var(--surface);
 }
 
 .verb:disabled {
@@ -1730,7 +1730,7 @@ h3 {
 
   .verb:hover:not(:disabled) {
     background: var(--text);
-    color: #1a1a1a;
+    color: var(--surface);
   }
 
   .verbs-close:hover,

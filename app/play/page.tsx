@@ -101,7 +101,7 @@ export default function Play() {
               <li key={t.id}>
                 <div className="tile-art" style={{ display: "grid", placeItems: "center" }}>
                   <span className="ink">
-                    <ObjectIcon id={t.id} size={44} />
+                    <ObjectIcon id={t.id} size={80} />
                   </span>
                 </div>
                 <span className="tile-label">{t.label}</span>
