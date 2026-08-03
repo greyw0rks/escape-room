@@ -151,6 +151,29 @@ approved as such.
   hotspots off-art at 360/768/1024/1280/1440/1920; all popovers place; 77 tests
   pass; full playthrough clean; client JS 937 KB (< 2 MB gate).
 
+### Marketing/game subdomain split (2026-08-02)
+One codebase, two faces, switched by request host at the edge:
+- **apex** (`escape-room.uno`, `www.`) → the marketing landing at `/`. Game
+  routes (`/play`, `/stats`, `/leaderboard`) **307 to the canonical game host**.
+  `/legal` deliberately stays on the apex (footer link).
+- **game subdomains** (`game.` canonical, plus `app.` / `celo.`) → `/` rewrites
+  to the Today feed, so the subdomain root *is* the game. Other paths pass through.
+- **Everything else passes through untouched** — the current Vercel URL and
+  `localhost` behave exactly as before. **This is the safety property that keeps
+  MiniPay's currently-listed URL working**; the split is inert until the real
+  domain's DNS points here.
+- **Logic** is a pure, unit-tested module (`lib/hostRouting.ts`, 18 tests);
+  `proxy.ts` (Next 16's renamed middleware convention) is a thin wrapper.
+- **Hosts are env-overridable**: `NEXT_PUBLIC_APEX_HOST` / `NEXT_PUBLIC_GAME_HOST`.
+- **NOT YET DEPLOYABLE END TO END**: `escape-room.uno` is **not registered**.
+  Once it is, point apex + `game`/`app`/`celo` CNAMEs at Vercel and add the
+  domains to the project — no code change needed. MiniPay's listed URL should be
+  updated to `game.escape-room.uno` at that point.
+- **Verified at runtime** by cur\-ing the server with each `Host` header: apex `/`
+  serves the landing (byte-identical to the passthrough Vercel host), apex `/play`
+  307s to `game.escape-room.uno/play`, `/legal` stays 200 on apex, and the game
+  host `/` serves the feed (different byte length, "Things to search" markers).
+
 ### Gameplay — tappable scene + prop artifacts (2026-07-31)
 The room was a chat log with a row of buttons. It is now a place you look at.
 
