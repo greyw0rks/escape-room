@@ -1,10 +1,20 @@
 /* ==========================================================================
    ESCAPE — design system
-   Dark editorial. Built to heal-grow-ui-spec.md.
+   Retro Macintosh. Built to docs/retro-mac-ui-spec.md.
 
-   Charcoal ground, cream illustration panels, serif display over sans body.
-   The art is the interface: illustrations run full-bleed or fill a card, and
-   type sits under them rather than competing with them.
+   Sky-blue hero bands over an off-white ground, everything framed in hard 1px
+   black window chrome with a pinstriped title bar. Bitmap display type for
+   headings and labels, monospace for everything you actually read.
+
+   Two rules carry the whole look:
+     1. Borders are solid black, never translucent — that is what reads as Mac
+        window chrome rather than as a modern card.
+     2. Nothing is rounded. --radius is 0 and stays 0.
+
+   Bitmap type is wide and turns illegible when small, and MiniPay's review
+   fails apps with broken mobile layouts, so the pixel face is used ONLY for
+   headings, labels, buttons and title bars — never for a paragraph — and only
+   at the --px-* sizes below.
 
    Mobile-first, authored at 360x640 (MiniPay's hard minimum).
    Plain CSS only: no Tailwind, no CSS-in-JS. Keeps the JS bundle under 2 MB.
@@ -12,29 +22,36 @@
 
 :root {
   /* --- Ground ----------------------------------------------------------- */
-  --bg: #1a1a1a;
-  --surface: #252525;
-  --surface-2: #2e2e2e;
+  --bg: #f5f5f0;
+  --surface: #ffffff;
+  --surface-2: #eceae4;
 
-  /* Illustration ground. Every drawing sits on this, never on the charcoal —
-     that cream/charcoal contrast is the whole look. */
-  --cream: #e8e0d0;
-  --cream-2: #dcd3c0;
+  /* The hero and the room sit on sky; content sections sit on off-white. That
+     band contrast replaces the old cream-on-charcoal one. */
+  --sky: #a8d8f0;
+  --sky-2: #8cc7e6;
+
+  /* Illustration ground. Every drawing sits on this, never straight on the
+     section background. */
+  --paper: #fdfcf7;
+  --paper-2: #f0ede2;
 
   /* --- Type ------------------------------------------------------------- */
-  --text: #f0ede8;
-  --text-2: #9a9590;
-  --text-3: #6d6863;
+  --text: #111111;
+  --text-2: #4a4a4a;
+  --text-3: #7a7a7a;
 
   /* --- Accent. Used sparingly: the clue, the alarm, the way out. --------- */
-  --red: #c4553f;
-  --green: #7fa87f;
+  --accent: #ffd83d; /* highlighter yellow */
+  --red: #d0342c;
+  --green: #2e8b57;
 
-  --line: rgba(240, 237, 232, 0.1);
-  --line-2: rgba(240, 237, 232, 0.18);
+  /* Chrome. Solid, not translucent — see rule 1 above. */
+  --line: #111111;
+  --line-2: rgba(17, 17, 17, 0.35);
 
-  --radius: 4px; /* tight, not pill-shaped — per spec */
-  --radius-lg: 8px;
+  --radius: 0;
+  --radius-lg: 0;
 
   /* --- Type scale ------------------------------------------------------
      16px base so mobile browsers never zoom on input focus. */
@@ -47,6 +64,15 @@
   --fs-xl: 1.75rem;
   --fs-2xl: 2.25rem; /* display */
   --fs-3xl: 2.75rem;
+
+  /* Bitmap type is crisp only at whole-pixel sizes, so the pixel face gets its
+     own px scale rather than inheriting the rem one above. */
+  --px-xs: 8px;
+  --px-sm: 10px;
+  --px-md: 12px;
+  --px-lg: 16px;
+  --px-xl: 22px;
+  --px-2xl: 28px;
 
   --space-1: 4px;
   --space-2: 8px;
@@ -84,7 +110,7 @@ html {
 body {
   background: var(--bg);
   color: var(--text);
-  font-family: var(--font-body), ui-sans-serif, system-ui, sans-serif;
+  font-family: var(--font-mono), ui-monospace, "Courier New", monospace;
   font-size: var(--fs-base);
   line-height: 1.55;
   -webkit-font-smoothing: antialiased;
@@ -109,7 +135,7 @@ h1,
 h2,
 h3,
 .display {
-  font-family: var(--font-display), Georgia, serif;
+  font-family: var(--font-display), ui-monospace, monospace;
   font-weight: 400;
   line-height: 1.24;
   letter-spacing: -0.01em;
@@ -126,7 +152,7 @@ h3 {
 
 /* Section header + its muted subhead — the spec's core repeating unit. */
 .sec-title {
-  font-family: var(--font-display), Georgia, serif;
+  font-family: var(--font-display), ui-monospace, monospace;
   font-size: var(--fs-lg);
   font-weight: 400;
   color: var(--text);
@@ -307,14 +333,14 @@ h3 {
 }
 
 .btn-primary {
-  background: var(--cream);
-  border-color: var(--cream);
+  background: var(--text);
+  border-color: var(--text);
   color: #1a1a1a;
   letter-spacing: 0.1em;
 }
 
 .btn-primary:active {
-  background: var(--cream-2);
+  background: var(--paper-2);
 }
 
 .btn-ghost {
@@ -333,8 +359,8 @@ h3 {
   min-height: 48px;
   padding: 0;
   border-radius: 50%;
-  background: var(--cream);
-  border-color: var(--cream);
+  background: var(--text);
+  border-color: var(--text);
   color: #1a1a1a;
   font-size: var(--fs-lg);
 }
@@ -361,7 +387,7 @@ h3 {
 
 .input:focus {
   outline: none;
-  border-color: var(--cream);
+  border-color: var(--text);
 }
 
 .input:focus-visible,
@@ -370,7 +396,7 @@ h3 {
 .nav-link:focus-visible,
 .hotspot:focus-visible,
 .tile:focus-visible {
-  outline: 2px solid var(--cream);
+  outline: 2px solid var(--text);
   outline-offset: 2px;
 }
 
@@ -394,7 +420,7 @@ h3 {
 }
 
 .pill-cream {
-  background: var(--cream);
+  background: var(--text);
   color: #1a1a1a;
 }
 .pill-red {
@@ -417,7 +443,7 @@ h3 {
    the spec — art never sits directly on the charcoal. */
 
 .panel {
-  background: var(--cream);
+  background: var(--paper);
   border-radius: var(--radius);
   overflow: hidden;
 }
@@ -459,7 +485,7 @@ h3 {
 
 .tile-art {
   aspect-ratio: 1 / 1;
-  background: var(--cream);
+  background: var(--paper);
   border-radius: var(--radius);
   overflow: hidden;
 }
@@ -618,7 +644,7 @@ h3 {
   position: absolute;
   inset: 0;
   width: 34%;
-  background: var(--cream);
+  background: var(--text);
   animation: sweep 1.5s var(--ease) infinite;
 }
 
@@ -636,7 +662,7 @@ h3 {
 .splash-art {
   flex: 1;
   min-height: 0;
-  background: var(--cream);
+  background: var(--paper);
   overflow: hidden;
 }
 
@@ -653,7 +679,7 @@ h3 {
 }
 
 .splash-title {
-  font-family: var(--font-display), Georgia, serif;
+  font-family: var(--font-display), ui-monospace, monospace;
   font-size: var(--fs-2xl);
   font-weight: 400;
   line-height: 1.15;
@@ -690,7 +716,7 @@ h3 {
 
 .hero-panel {
   position: relative;
-  background: var(--cream);
+  background: var(--paper);
   border-radius: var(--radius);
   overflow: hidden;
 }
@@ -782,7 +808,7 @@ h3 {
 }
 
 .room-title {
-  font-family: var(--font-display), Georgia, serif;
+  font-family: var(--font-display), ui-monospace, monospace;
   font-size: var(--fs-13);
   color: var(--text);
 }
@@ -808,7 +834,7 @@ h3 {
 }
 .room-progress > div {
   height: 100%;
-  background: var(--cream);
+  background: var(--text);
   transition: width var(--slow) var(--ease);
 }
 
@@ -820,7 +846,7 @@ h3 {
      game, not a header. */
   min-height: 34vh;
   margin: var(--space-3);
-  background: var(--cream);
+  background: var(--paper);
   border-radius: var(--radius);
   overflow: hidden;
 }
@@ -894,7 +920,7 @@ h3 {
   letter-spacing: 0.06em;
   text-transform: uppercase;
   white-space: nowrap;
-  color: var(--cream);
+  color: var(--text);
   pointer-events: none;
   /* Tags on the outermost hotspots would clip against the stage edge. */
   max-width: 84px;
@@ -934,7 +960,7 @@ h3 {
 }
 
 .caption-win {
-  font-family: var(--font-display), Georgia, serif;
+  font-family: var(--font-display), ui-monospace, monospace;
   font-size: var(--fs-lg);
   color: var(--green);
 }
@@ -966,7 +992,7 @@ h3 {
   height: 30px;
   flex-shrink: 0;
   border-radius: 2px;
-  background: var(--cream);
+  background: var(--paper);
   overflow: hidden;
 }
 
@@ -1035,7 +1061,7 @@ h3 {
 
 .score-total {
   font-size: var(--fs-xl);
-  color: var(--cream);
+  color: var(--text);
 }
 
 /* --- Artifact viewer -----------------------------------------------------
@@ -1068,7 +1094,7 @@ h3 {
 }
 
 .artifact-title {
-  font-family: var(--font-display), Georgia, serif;
+  font-family: var(--font-display), ui-monospace, monospace;
   font-size: var(--fs-lg);
   color: var(--text);
 }
@@ -1087,7 +1113,7 @@ h3 {
 }
 
 .artifact-paper {
-  background: var(--cream);
+  background: var(--paper);
   border-radius: var(--radius);
   overflow: hidden;
 }
@@ -1129,7 +1155,7 @@ h3 {
 }
 
 .lp-hero-art {
-  background: var(--cream);
+  background: var(--paper);
   overflow: hidden;
 }
 
@@ -1143,7 +1169,7 @@ h3 {
 }
 
 .lp-title {
-  font-family: var(--font-display), Georgia, serif;
+  font-family: var(--font-display), ui-monospace, monospace;
   font-size: var(--fs-2xl);
   font-weight: 400;
   line-height: 1.16;
@@ -1187,7 +1213,7 @@ h3 {
 }
 
 .lp-step-title {
-  font-family: var(--font-display), Georgia, serif;
+  font-family: var(--font-display), ui-monospace, monospace;
   font-size: var(--fs-md);
   font-weight: 400;
   margin-bottom: 2px;
@@ -1356,7 +1382,7 @@ h3 {
 
 .verb:active {
   transform: scale(0.96);
-  background: var(--cream);
+  background: var(--text);
   color: #1a1a1a;
 }
 
@@ -1595,7 +1621,7 @@ h3 {
   }
 
   .verb:hover:not(:disabled) {
-    background: var(--cream);
+    background: var(--text);
     color: #1a1a1a;
   }
 
@@ -1606,7 +1632,7 @@ h3 {
   }
 
   .btn:hover:not(:disabled) {
-    border-color: var(--cream);
+    border-color: var(--text);
   }
 
   .btn-primary:hover:not(:disabled) {
@@ -1621,7 +1647,7 @@ h3 {
 
   .chip:hover:not(:disabled) {
     background: var(--surface);
-    border-color: var(--cream);
+    border-color: var(--text);
   }
 
   .thumb:hover,
