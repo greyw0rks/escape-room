@@ -100,7 +100,7 @@ export default function Play() {
             {WHATS_INSIDE.map((t) => (
               <li key={t.id}>
                 <div className="tile-art" style={{ display: "grid", placeItems: "center" }}>
-                  <span style={{ color: "#1a1a1a", display: "flex" }}>
+                  <span className="ink">
                     <ObjectIcon id={t.id} size={44} />
                   </span>
                 </div>
