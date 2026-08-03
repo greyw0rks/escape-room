@@ -78,6 +78,103 @@ contract DailyRoomPoolTest is Test {
         poolContract.enterRoom(DAY, address(usd));
     }
 
+    function _checkIn(address who) internal {
+        vm.prank(who);
+        poolContract.checkIn(DAY);
+    }
+
+    // ── Check-in ─────────────────────────────────────────────────────────────
+
+    function test_checkIn_recordsWalletAndCountsTheDay() public {
+        assertFalse(poolContract.hasCheckedIn(DAY, alice));
+
+        _checkIn(alice);
+
+        assertTrue(poolContract.hasCheckedIn(DAY, alice));
+        assertEq(poolContract.checkIns(DAY), 1);
+    }
+
+    function test_checkIn_countsEachWalletOnce() public {
+        _checkIn(alice);
+        _checkIn(bob);
+
+        assertEq(poolContract.checkIns(DAY), 2);
+        assertTrue(poolContract.hasCheckedIn(DAY, bob));
+        assertFalse(poolContract.hasCheckedIn(DAY, carol));
+    }
+
+    function test_checkIn_rejectsSecondCheckInFromSameWallet() public {
+        _checkIn(alice);
+
+        vm.prank(alice);
+        vm.expectRevert(DailyRoomPool.AlreadyCheckedIn.selector);
+        poolContract.checkIn(DAY);
+    }
+
+    function test_checkIn_isPerDay() public {
+        _checkIn(alice);
+
+        vm.prank(alice);
+        poolContract.checkIn(DAY + 1);
+
+        assertTrue(poolContract.hasCheckedIn(DAY + 1, alice));
+        assertEq(poolContract.checkIns(DAY), 1);
+        assertEq(poolContract.checkIns(DAY + 1), 1);
+    }
+
+    function test_checkIn_emitsTheWalletAndDay() public {
+        vm.expectEmit(true, true, false, true);
+        emit DailyRoomPool.CheckedIn(DAY, alice, uint64(block.timestamp));
+        _checkIn(alice);
+    }
+
+    /// The point of the free path: it must be incapable of touching the money.
+    function test_checkIn_movesNoTokens() public {
+        _enter(bob); // give the contract a non-zero balance to disturb
+
+        uint256 held = usd.balanceOf(address(poolContract));
+        uint256 wallet = usd.balanceOf(alice);
+        uint256 prize = poolContract.poolOf(DAY, address(usd));
+        uint256 fees = poolContract.treasury(address(usd));
+
+        _checkIn(alice);
+
+        assertEq(usd.balanceOf(address(poolContract)), held);
+        assertEq(usd.balanceOf(alice), wallet);
+        assertEq(poolContract.poolOf(DAY, address(usd)), prize);
+        assertEq(poolContract.treasury(address(usd)), fees);
+    }
+
+    function test_checkIn_blockedWhenPaused() public {
+        vm.prank(owner);
+        poolContract.pause();
+
+        vm.prank(alice);
+        vm.expectRevert();
+        poolContract.checkIn(DAY);
+    }
+
+    /// Checking in is not paying: it must not buy a seat in the paid pool.
+    function test_checkIn_doesNotGrantEntry() public {
+        _checkIn(alice);
+
+        assertFalse(poolContract.hasEntered(DAY, address(usd), alice));
+        assertEq(poolContract.entrants(DAY, address(usd)), 0);
+
+        uint256 before = usd.balanceOf(alice);
+        _enter(alice);
+        assertEq(usd.balanceOf(alice), before - FEE);
+    }
+
+    function test_checkIn_independentOfEntry() public {
+        _enter(alice);
+        assertFalse(poolContract.hasCheckedIn(DAY, alice));
+
+        _checkIn(alice);
+        assertTrue(poolContract.hasCheckedIn(DAY, alice));
+        assertTrue(poolContract.hasEntered(DAY, address(usd), alice));
+    }
+
     // ── Entry ────────────────────────────────────────────────────────────────
 
     function test_entry_splitsFeeBetweenPoolAndTreasury() public {
@@ -486,5 +583,27 @@ contract DailyRoomPoolTest is Test {
 
         // The contract can never owe more than it holds.
         assertGe(usd.balanceOf(address(poolContract)), poolContract.poolOf(DAY, address(usd)));
+    }
+
+    /// No day, and no number of check-ins, can move a single unit of value.
+    function testFuzz_checkInNeverTouchesTheMoney(uint32 dayId, uint8 count) public {
+        _enter(alice);
+        _enter(bob);
+
+        uint256 held = usd.balanceOf(address(poolContract));
+        uint256 prize = poolContract.poolOf(DAY, address(usd));
+        uint256 fees = poolContract.treasury(address(usd));
+
+        uint32 n = uint32(bound(count, 1, 32));
+        for (uint160 i = 0; i < n; i++) {
+            // A fresh wallet each time, so every check-in is a first one.
+            vm.prank(address(0xC0DE + i));
+            poolContract.checkIn(dayId);
+        }
+
+        assertEq(poolContract.checkIns(dayId), n);
+        assertEq(usd.balanceOf(address(poolContract)), held);
+        assertEq(poolContract.poolOf(DAY, address(usd)), prize);
+        assertEq(poolContract.treasury(address(usd)), fees);
     }
 }
