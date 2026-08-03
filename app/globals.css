@@ -932,14 +932,21 @@ h3 {
   transition: width var(--slow) var(--ease);
 }
 
-/* The scene. A framed plate on the sky, like a window on a desktop. */
+/* The scene. A framed plate on the sky, like a window on a desktop.
+
+   Capped to the art's own ratio. Hotspots are positioned against the stage
+   rather than the SVG, so a stage wider than 400:340 letterboxes the drawing
+   and the taps drift off it. On a phone the stage is always narrower than that
+   and the cap never binds; on a tablet held portrait it does. */
 .room-stage {
   position: relative;
   flex: 1;
   /* Never let the caption squeeze the room into a strip — the scene is the
      game, not a header. */
   min-height: 34vh;
-  margin: var(--space-3);
+  max-width: calc((100dvh - 190px) * 400 / 340);
+  width: 100%;
+  margin: var(--space-3) auto;
   background: var(--paper);
   border: 1px solid var(--line);
   border-radius: var(--radius);
@@ -1556,14 +1563,20 @@ h3 {
   /* Pinned to the scene's viewBox ratio. The SVG is xMidYMid meet, but the
      hotspots are positioned against the STAGE, so any stage wider than the art
      letterboxes the drawing and strands hotspots off it — measured at 1440px,
-     3 of 7 ended up outside the artwork before this constraint. */
+     3 of 7 ended up outside the artwork before this constraint.
+
+     Sized from the ROW HEIGHT, not the column width: now that the shell is
+     full-bleed the column can be wider than the available height, and
+     `width: 100%` then wins over aspect-ratio and re-introduces the letterbox
+     (one hotspot went off-art at 1920px that way). Driving off height and
+     capping the width keeps the plate exactly 400:340 at any viewport. */
   .room-stage {
     grid-column: 1;
     grid-row: 3 / -1;
     aspect-ratio: 400 / 340;
-    width: 100%;
-    height: auto;
-    max-height: 100%;
+    height: 100%;
+    width: auto;
+    max-width: 100%;
     min-height: 0;
     margin: 0;
     align-self: start;
