@@ -1364,3 +1364,279 @@ h3 {
   opacity: 0.4;
   cursor: not-allowed;
 }
+
+/* --- Desktop -------------------------------------------------------------
+   MiniPay is still the primary target, so everything above stays the mobile
+   layout untouched and desktop is additive from 900px up. Below that width
+   nothing in this section applies. */
+
+@media (min-width: 900px) {
+  .app-shell {
+    max-width: 1120px;
+  }
+
+  /* The room is the one screen that wants every pixel: the scene is fixed to
+     the art's ratio, so a narrower shell caps how large the drawing can get and
+     leaves dead charcoal under it. Falls back to 1120px where :has() is
+     unsupported, which still lays out correctly. */
+  .app-shell:has(.room) {
+    max-width: 1320px;
+  }
+
+  /* Pages that are a single column of cards would read as a stretched phone
+     at 1120px, so they keep a narrow measure and centre instead. */
+  .page-narrow {
+    max-width: 760px;
+    width: 100%;
+    margin: 0 auto;
+  }
+
+  /* Tabs belong at the top on a pointer device; a bottom bar reads as a phone
+     chrome. .app-shell is a flex column, so order moves it above <main>.
+     The padding lines the first tab up with the centred .page-narrow column
+     beneath it while the bottom border still runs the full width. */
+  .tabbar {
+    order: -1;
+    position: sticky;
+    top: 0;
+    bottom: auto;
+    justify-content: flex-start;
+    gap: var(--space-5);
+    padding-inline: max(var(--space-5), calc((100% - 760px) / 2));
+    padding-bottom: 0;
+    border-top: 0;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .tabbar a {
+    flex: 0 0 auto;
+  }
+
+  /* --- Room: art left, text right ---------------------------------------
+     Same DOM as mobile; the column flex becomes a grid and each part is
+     placed by line number. */
+  .room {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 380px;
+    grid-template-rows: auto auto auto minmax(0, 1fr);
+    column-gap: var(--space-5);
+    padding: 0 var(--space-5) var(--space-5);
+  }
+
+  .room-bar,
+  .room-progress {
+    grid-column: 1 / -1;
+  }
+
+  .room-progress {
+    margin-inline: 0;
+  }
+
+  /* Pinned to the scene's viewBox ratio. The SVG is xMidYMid meet, but the
+     hotspots are positioned against the STAGE, so any stage wider than the art
+     letterboxes the drawing and strands hotspots off it — measured at 1440px,
+     3 of 7 ended up outside the artwork before this constraint. */
+  .room-stage {
+    grid-column: 1;
+    grid-row: 3 / -1;
+    aspect-ratio: 400 / 340;
+    width: 100%;
+    height: auto;
+    max-height: 100%;
+    min-height: 0;
+    margin: 0;
+    align-self: start;
+    justify-self: center;
+  }
+
+  /* 26vh is a mobile heuristic for "don't let text eat the scene". In a side
+     column it just produces a stubby box. */
+  .room-caption {
+    grid-column: 2;
+    grid-row: 3;
+    height: auto;
+    min-height: 0;
+    padding: 0;
+  }
+
+  .room-actions {
+    grid-column: 2;
+    grid-row: 4;
+    align-self: start;
+    margin-top: var(--space-4);
+    padding-inline: 0;
+    border-top: 0;
+  }
+
+  /* --- Landing ----------------------------------------------------------- */
+  .lp-nav {
+    padding-inline: var(--space-5);
+  }
+
+  .lp-hero {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    align-items: center;
+    gap: var(--space-7);
+    padding: var(--space-7) var(--space-5);
+  }
+
+  .lp-hero-art {
+    border-radius: var(--radius);
+  }
+
+  .lp-hero-body {
+    padding: 0;
+  }
+
+  /* The pill is a flex child of a column stack, so it stretches to the full
+     column width unless told to shrink to its label. */
+  .lp-hero-body > .pill {
+    align-self: flex-start;
+  }
+
+  .lp-title {
+    font-size: calc(var(--fs-2xl) * 1.4);
+  }
+
+  /* Buttons sit side by side rather than stacked full-width — a 500px-wide
+     primary button looks like an error. */
+  .lp-hero-body .stack-sm {
+    flex-direction: row;
+    gap: var(--space-3);
+  }
+
+  .lp-hero-body .btn-block {
+    width: auto;
+    flex: 0 0 auto;
+  }
+
+  .lp-hero-body .faint.center {
+    text-align: left;
+  }
+
+  /* Constrain the measure with padding rather than a max-width + auto margins
+     on every child: auto margins would also centre the capped prose below,
+     pushing it out of alignment with its own heading. Padding keeps the alt
+     band's background full-bleed either way. */
+  .lp-section {
+    padding: var(--space-7) max(var(--space-5), calc((100% - 1040px) / 2));
+  }
+
+  .lp-close {
+    padding-inline: max(var(--space-5), calc((100% - 1040px) / 2));
+  }
+
+  .tiles {
+    grid-template-columns: repeat(4, 1fr);
+  }
+
+  /* The landing grid holds six items, so four across leaves a ragged 4+2.
+     Three gives two full rows. */
+  .lp-section .tiles {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .lp-steps {
+    flex-direction: row;
+    gap: var(--space-5);
+  }
+
+  .lp-steps li {
+    flex: 1 1 0;
+  }
+
+  .lp-modes {
+    flex-direction: row;
+  }
+
+  .lp-modes > * {
+    flex: 1 1 0;
+  }
+
+  .lp-faq,
+  .lp-faq-a {
+    max-width: 860px;
+    margin-inline: auto;
+  }
+
+  /* A 1120px shell would otherwise run prose to ~140 characters a line. */
+  .lp-sub,
+  .sec-sub,
+  .lp-section > .muted {
+    max-width: 62ch;
+  }
+
+  .lp-footer nav {
+    gap: var(--space-5);
+  }
+}
+
+/* --- Pointer affordances -------------------------------------------------
+   The room is built for taps, so nothing signals "clickable" to a mouse until
+   you click. Gated on a real pointer so touch devices never get a hover state
+   stuck on after a tap. */
+
+@media (hover: hover) and (pointer: fine) {
+  /* The important one: with a mouse this is the only cue that a hotspot is
+     live. It deliberately does not reveal the object's name — finding the
+     things is the game. */
+  .hotspot:hover .hotspot-ring {
+    transform: scale(1.18);
+    border-color: rgba(26, 26, 26, 0.8);
+    background: rgba(232, 224, 208, 0.9);
+  }
+
+  .hotspot-ring {
+    transition:
+      transform var(--fast) var(--ease),
+      border-color var(--fast) var(--ease),
+      background var(--fast) var(--ease);
+  }
+
+  .verb:hover:not(:disabled) {
+    background: var(--cream);
+    color: #1a1a1a;
+  }
+
+  .verbs-close:hover,
+  .artifact-close:hover {
+    background: var(--surface-2);
+    color: var(--text);
+  }
+
+  .btn:hover:not(:disabled) {
+    border-color: var(--cream);
+  }
+
+  .btn-primary:hover:not(:disabled) {
+    background: #fff;
+    border-color: #fff;
+  }
+
+  .btn-ghost:hover:not(:disabled) {
+    background: var(--surface);
+    color: var(--text);
+  }
+
+  .chip:hover:not(:disabled) {
+    background: var(--surface);
+    border-color: var(--cream);
+  }
+
+  .thumb:hover,
+  .banner:hover,
+  .resource:hover,
+  .disclosure:hover {
+    background: var(--surface);
+  }
+
+  .tile:hover {
+    transform: translateY(-2px);
+  }
+
+  .tabbar a:hover,
+  .nav-link:hover {
+    color: var(--text);
+  }
+}
