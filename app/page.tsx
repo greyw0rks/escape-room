@@ -85,7 +85,7 @@ export default function Landing() {
           <h1 className="lp-title">
             You have eight minutes
             <br />
-            <span style={{ color: "var(--cream)" }}>to get out.</span>
+            <span className="hl">to get out.</span>
           </h1>
           <p className="lp-sub">
             An escape room you play on your phone. Search it, question whoever is inside,
@@ -115,8 +115,8 @@ export default function Landing() {
           {THINGS.map((t) => (
             <li key={t.id}>
               <div className="tile-art" style={{ display: "grid", placeItems: "center" }}>
-                <span style={{ color: "#1a1a1a", display: "flex" }}>
-                  <ObjectIcon id={t.id} size={44} />
+                <span className="ink">
+                  <ObjectIcon id={t.id} size={80} />
                 </span>
               </div>
               <span className="tile-label">{t.label}</span>

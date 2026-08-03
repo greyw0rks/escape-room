@@ -11,8 +11,8 @@ export default function manifest(): MetadataRoute.Manifest {
       "A new AI-built escape room every day. Search it, question whoever is inside, and get out before the clock runs down.",
     start_url: "/",
     display: "standalone",
-    background_color: "#1a1a1a",
-    theme_color: "#1a1a1a",
+    background_color: "#f5f5f0",
+    theme_color: "#a8d8f0",
     orientation: "portrait",
     categories: ["games", "puzzle"],
     icons: [

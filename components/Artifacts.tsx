@@ -8,11 +8,11 @@
  * lines only, one red accent, matching the paper design tokens.
  */
 
-const INK = "#16130f";
-const INK_2 = "#4a443b";
-const INK_3 = "#8b8375";
-const RED = "#b8392b";
-const PAPER = "#e8e0cd";
+const INK = "#111111";
+const INK_2 = "#4a4a4a";
+const INK_3 = "#7a7a7a";
+const RED = "#d0342c";
+const PAPER = "#fdfcf7";
 
 /** Handwriting, faked as a wobbling polyline. Real text at this scale would
  *  be unreadable anyway, and illegible-but-convincing is the point. */

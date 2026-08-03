@@ -1,10 +1,20 @@
 /* ==========================================================================
    ESCAPE — design system
-   Dark editorial. Built to heal-grow-ui-spec.md.
+   Retro Macintosh. Built to docs/retro-mac-ui-spec.md.
 
-   Charcoal ground, cream illustration panels, serif display over sans body.
-   The art is the interface: illustrations run full-bleed or fill a card, and
-   type sits under them rather than competing with them.
+   Sky-blue hero bands over an off-white ground, everything framed in hard 1px
+   black window chrome with a pinstriped title bar. Bitmap display type for
+   headings and labels, monospace for everything you actually read.
+
+   Two rules carry the whole look:
+     1. Borders are solid black, never translucent — that is what reads as Mac
+        window chrome rather than as a modern card.
+     2. Nothing is rounded. --radius is 0 and stays 0.
+
+   Bitmap type is wide and turns illegible when small, and MiniPay's review
+   fails apps with broken mobile layouts, so the pixel face is used ONLY for
+   headings, labels, buttons and title bars — never for a paragraph — and only
+   at the --px-* sizes below.
 
    Mobile-first, authored at 360x640 (MiniPay's hard minimum).
    Plain CSS only: no Tailwind, no CSS-in-JS. Keeps the JS bundle under 2 MB.
@@ -12,29 +22,36 @@
 
 :root {
   /* --- Ground ----------------------------------------------------------- */
-  --bg: #1a1a1a;
-  --surface: #252525;
-  --surface-2: #2e2e2e;
+  --bg: #f5f5f0;
+  --surface: #ffffff;
+  --surface-2: #eceae4;
 
-  /* Illustration ground. Every drawing sits on this, never on the charcoal —
-     that cream/charcoal contrast is the whole look. */
-  --cream: #e8e0d0;
-  --cream-2: #dcd3c0;
+  /* The hero and the room sit on sky; content sections sit on off-white. That
+     band contrast replaces the old cream-on-charcoal one. */
+  --sky: #a8d8f0;
+  --sky-2: #8cc7e6;
+
+  /* Illustration ground. Every drawing sits on this, never straight on the
+     section background. */
+  --paper: #fdfcf7;
+  --paper-2: #f0ede2;
 
   /* --- Type ------------------------------------------------------------- */
-  --text: #f0ede8;
-  --text-2: #9a9590;
-  --text-3: #6d6863;
+  --text: #111111;
+  --text-2: #4a4a4a;
+  --text-3: #7a7a7a;
 
   /* --- Accent. Used sparingly: the clue, the alarm, the way out. --------- */
-  --red: #c4553f;
-  --green: #7fa87f;
+  --accent: #ffd83d; /* highlighter yellow */
+  --red: #d0342c;
+  --green: #2e8b57;
 
-  --line: rgba(240, 237, 232, 0.1);
-  --line-2: rgba(240, 237, 232, 0.18);
+  /* Chrome. Solid, not translucent — see rule 1 above. */
+  --line: #111111;
+  --line-2: rgba(17, 17, 17, 0.35);
 
-  --radius: 4px; /* tight, not pill-shaped — per spec */
-  --radius-lg: 8px;
+  --radius: 0;
+  --radius-lg: 0;
 
   /* --- Type scale ------------------------------------------------------
      16px base so mobile browsers never zoom on input focus. */
@@ -47,6 +64,15 @@
   --fs-xl: 1.75rem;
   --fs-2xl: 2.25rem; /* display */
   --fs-3xl: 2.75rem;
+
+  /* Bitmap type is crisp only at whole-pixel sizes, so the pixel face gets its
+     own px scale rather than inheriting the rem one above. */
+  --px-xs: 8px;
+  --px-sm: 10px;
+  --px-md: 12px;
+  --px-lg: 16px;
+  --px-xl: 22px;
+  --px-2xl: 28px;
 
   --space-1: 4px;
   --space-2: 8px;
@@ -84,16 +110,18 @@ html {
 body {
   background: var(--bg);
   color: var(--text);
-  font-family: var(--font-body), ui-sans-serif, system-ui, sans-serif;
+  font-family: var(--font-mono), ui-monospace, "Courier New", monospace;
   font-size: var(--fs-base);
   line-height: 1.55;
   -webkit-font-smoothing: antialiased;
   overscroll-behavior-y: none;
 }
 
+/* Full-bleed at every width. The old 480px cap letterboxed the app on any
+   screen wider than a phone; content gets its measure from section padding
+   instead, so the chrome, bands and rules always run edge to edge. */
 .app-shell {
-  max-width: 480px;
-  margin: 0 auto;
+  width: 100%;
   min-height: 100dvh;
   display: flex;
   flex-direction: column;
@@ -101,34 +129,37 @@ body {
 }
 
 /* --- Typography ----------------------------------------------------------
-   Serif for display and section headers, sans for everything else. The spec
-   is explicit about this split and it is what makes the layout read as
-   editorial rather than as an app template. */
+   Bitmap display for headings and labels, monospace for everything you
+   actually read. Pixel type is sized in whole px (--px-*) because a bitmap
+   face only lands on the pixel grid at integer sizes; anything else renders
+   soft. Never set a paragraph in it. */
 
 h1,
 h2,
 h3,
 .display {
-  font-family: var(--font-display), Georgia, serif;
+  font-family: var(--font-display), ui-monospace, monospace;
   font-weight: 400;
-  line-height: 1.24;
-  letter-spacing: -0.01em;
+  line-height: 1.35;
+  letter-spacing: 0;
+  text-transform: uppercase;
 }
 h1 {
-  font-size: var(--fs-2xl);
+  font-size: var(--px-xl);
 }
 h2 {
-  font-size: var(--fs-xl);
+  font-size: var(--px-lg);
 }
 h3 {
-  font-size: var(--fs-lg);
+  font-size: var(--px-md);
 }
 
-/* Section header + its muted subhead — the spec's core repeating unit. */
+/* Section header + its muted subhead — the core repeating unit. */
 .sec-title {
-  font-family: var(--font-display), Georgia, serif;
-  font-size: var(--fs-lg);
+  font-family: var(--font-display), ui-monospace, monospace;
+  font-size: var(--px-md);
   font-weight: 400;
+  text-transform: uppercase;
   color: var(--text);
 }
 
@@ -216,8 +247,68 @@ h3 {
 
 .card {
   background: var(--surface);
+  border: 1px solid var(--line);
   border-radius: var(--radius);
   padding: var(--space-4);
+}
+
+/* --- Window chrome -------------------------------------------------------
+   The motif the whole design hangs on: a hard 1px black frame with a
+   pinstriped title bar, straight off a Macintosh. Applied by adding .window
+   to a container and .window-bar to its first child, so panels that already
+   had a header row (the room bar, the artifact bar) become title bars rather
+   than growing a second one. */
+
+.window {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 0;
+}
+
+.window-bar {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 22px;
+  padding: 3px var(--space-3);
+  border-bottom: 1px solid var(--line);
+  background: var(--surface);
+  font-family: var(--font-display), ui-monospace, monospace;
+  font-size: var(--px-xs);
+  text-transform: uppercase;
+  color: var(--text);
+}
+
+/* The classic pinstripes, drawn either side of the centred title. A gradient
+   rather than an image keeps this free against the 2 MB bundle gate. */
+.window-bar::before,
+.window-bar::after {
+  content: "";
+  position: absolute;
+  top: 5px;
+  bottom: 5px;
+  width: calc(50% - var(--space-5));
+  background: repeating-linear-gradient(
+    180deg,
+    var(--line) 0 1px,
+    transparent 1px 3px
+  );
+}
+.window-bar::before {
+  left: var(--space-2);
+}
+.window-bar::after {
+  right: var(--space-2);
+}
+
+/* Title text sits above the stripes with a plate of background either side so
+   the rules never run into the letterforms. */
+.window-bar > * {
+  position: relative;
+  z-index: 1;
+  padding: 0 var(--space-2);
+  background: var(--surface);
 }
 
 /* The banner card from the spec's Today feed: full-width, slightly elevated,
@@ -270,7 +361,9 @@ h3 {
 }
 
 /* --- Buttons -------------------------------------------------------------
-   Cream fill, dark label, tight 4px radius, uppercase tracked — per spec. */
+   Hard black frame, pixel label. The primary is a solid black fill — on a
+   light ground that is the strongest thing on the screen, which is what a CTA
+   should be. */
 
 .btn {
   display: inline-flex;
@@ -279,25 +372,25 @@ h3 {
   gap: var(--space-2);
   min-height: var(--tap);
   padding: var(--space-3) var(--space-5);
-  border: 1px solid var(--line-2);
+  border: 1px solid var(--line);
   border-radius: var(--radius);
-  background: transparent;
+  background: var(--surface);
   color: var(--text);
-  font-family: inherit;
-  font-size: var(--fs-13);
-  font-weight: 500;
-  letter-spacing: 0.06em;
+  font-family: var(--font-display), ui-monospace, monospace;
+  font-size: var(--px-sm);
+  font-weight: 400;
+  letter-spacing: 0;
   text-transform: uppercase;
   cursor: pointer;
   text-decoration: none;
   transition:
     transform var(--fast) var(--ease),
     background var(--fast) var(--ease),
-    border-color var(--fast) var(--ease);
+    color var(--fast) var(--ease);
 }
 
 .btn:active {
-  transform: scale(0.97);
+  transform: translate(1px, 1px);
 }
 
 .btn:disabled {
@@ -307,36 +400,37 @@ h3 {
 }
 
 .btn-primary {
-  background: var(--cream);
-  border-color: var(--cream);
-  color: #1a1a1a;
-  letter-spacing: 0.1em;
+  background: var(--text);
+  border-color: var(--line);
+  color: var(--surface);
 }
 
 .btn-primary:active {
-  background: var(--cream-2);
+  background: var(--text-2);
 }
 
 .btn-ghost {
+  background: transparent;
   border-color: var(--line);
-  color: var(--text-2);
+  color: var(--text);
 }
 
 .btn-block {
   width: 100%;
 }
 
-/* Filled circle CTA from the splash screen. */
+/* Filled circle CTA from the splash screen. The one place a radius survives —
+   a circle reads as a button, not as a rounded rectangle. */
 .btn-circle {
   width: 48px;
   height: 48px;
   min-height: 48px;
   padding: 0;
   border-radius: 50%;
-  background: var(--cream);
-  border-color: var(--cream);
-  color: #1a1a1a;
-  font-size: var(--fs-lg);
+  background: var(--text);
+  border-color: var(--line);
+  color: var(--surface);
+  font-size: var(--px-lg);
 }
 
 /* --- Inputs -------------------------------------------------------------- */
@@ -361,7 +455,7 @@ h3 {
 
 .input:focus {
   outline: none;
-  border-color: var(--cream);
+  border-color: var(--text);
 }
 
 .input:focus-visible,
@@ -370,7 +464,7 @@ h3 {
 .nav-link:focus-visible,
 .hotspot:focus-visible,
 .tile:focus-visible {
-  outline: 2px solid var(--cream);
+  outline: 2px solid var(--text);
   outline-offset: 2px;
 }
 
@@ -381,10 +475,11 @@ h3 {
   align-items: center;
   gap: var(--space-1);
   padding: 4px var(--space-3);
+  border: 1px solid var(--line);
   border-radius: var(--radius);
-  font-size: var(--fs-xs);
-  font-weight: 500;
-  letter-spacing: 0.12em;
+  font-family: var(--font-display), ui-monospace, monospace;
+  font-size: var(--px-xs);
+  letter-spacing: 0;
   text-transform: uppercase;
   background: var(--surface-2);
   color: var(--text-2);
@@ -394,12 +489,13 @@ h3 {
 }
 
 .pill-cream {
-  background: var(--cream);
-  color: #1a1a1a;
+  background: var(--text);
+  color: var(--surface);
 }
 .pill-red {
-  background: rgba(196, 85, 63, 0.16);
-  color: var(--red);
+  background: var(--accent);
+  border-color: var(--line);
+  color: var(--text);
 }
 
 /* The only thing that moves on its own. */
@@ -417,7 +513,8 @@ h3 {
    the spec — art never sits directly on the charcoal. */
 
 .panel {
-  background: var(--cream);
+  background: var(--paper);
+  border: 1px solid var(--line);
   border-radius: var(--radius);
   overflow: hidden;
 }
@@ -459,9 +556,26 @@ h3 {
 
 .tile-art {
   aspect-ratio: 1 / 1;
-  background: var(--cream);
+  background: var(--paper);
+  border: 1px solid var(--line);
   border-radius: var(--radius);
   overflow: hidden;
+}
+
+/* Icon ink on an illustration plate. Exists so page JSX stops hardcoding a
+   colour inline, which a token change can never reach. */
+/* Marker highlight on a key phrase, straight off the reference. box-decoration
+   keeps the swatch intact when the phrase wraps mid-line. */
+.hl {
+  background: var(--accent);
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+  padding: 0 4px;
+}
+
+.ink {
+  color: var(--text);
+  display: flex;
 }
 
 .tile-art svg {
@@ -500,13 +614,18 @@ h3 {
   align-items: center;
   justify-content: center;
   text-decoration: none;
-  font-size: var(--fs-13);
+  font-family: var(--font-display), ui-monospace, monospace;
+  font-size: var(--px-sm);
+  text-transform: uppercase;
   color: var(--text-3);
-  transition: color var(--fast) var(--ease);
+  transition: color var(--fast) var(--ease), background var(--fast) var(--ease);
 }
 
+/* Inverted rather than merely brighter — a filled tab is how a Mac showed the
+   active one, and it survives the low contrast of a light ground. */
 .tabbar a.active {
-  color: var(--text);
+  background: var(--text);
+  color: var(--surface);
 }
 
 .nav-link {
@@ -618,7 +737,7 @@ h3 {
   position: absolute;
   inset: 0;
   width: 34%;
-  background: var(--cream);
+  background: var(--text);
   animation: sweep 1.5s var(--ease) infinite;
 }
 
@@ -636,7 +755,7 @@ h3 {
 .splash-art {
   flex: 1;
   min-height: 0;
-  background: var(--cream);
+  background: var(--paper);
   overflow: hidden;
 }
 
@@ -653,7 +772,7 @@ h3 {
 }
 
 .splash-title {
-  font-family: var(--font-display), Georgia, serif;
+  font-family: var(--font-display), ui-monospace, monospace;
   font-size: var(--fs-2xl);
   font-weight: 400;
   line-height: 1.15;
@@ -690,7 +809,8 @@ h3 {
 
 .hero-panel {
   position: relative;
-  background: var(--cream);
+  background: var(--paper);
+  border: 1px solid var(--line);
   border-radius: var(--radius);
   overflow: hidden;
 }
@@ -763,14 +883,14 @@ h3 {
 }
 
 /* --- The room screen -----------------------------------------------------
-   The scene is a cream illustration panel filling the screen; you tap the
+   The scene is a framed illustration plate on the sky band; you tap the
    objects in it. Text sits underneath as a caption, never as a transcript. */
 
 .room {
   display: flex;
   flex-direction: column;
   height: 100dvh;
-  background: var(--bg);
+  background: var(--sky);
 }
 
 .room-bar {
@@ -782,7 +902,7 @@ h3 {
 }
 
 .room-title {
-  font-family: var(--font-display), Georgia, serif;
+  font-family: var(--font-display), ui-monospace, monospace;
   font-size: var(--fs-13);
   color: var(--text);
 }
@@ -808,19 +928,27 @@ h3 {
 }
 .room-progress > div {
   height: 100%;
-  background: var(--cream);
+  background: var(--text);
   transition: width var(--slow) var(--ease);
 }
 
-/* The scene. Cream panel, inset from the charcoal like a plate on a page. */
+/* The scene. A framed plate on the sky, like a window on a desktop.
+
+   Capped to the art's own ratio. Hotspots are positioned against the stage
+   rather than the SVG, so a stage wider than 400:340 letterboxes the drawing
+   and the taps drift off it. On a phone the stage is always narrower than that
+   and the cap never binds; on a tablet held portrait it does. */
 .room-stage {
   position: relative;
   flex: 1;
   /* Never let the caption squeeze the room into a strip — the scene is the
      game, not a header. */
   min-height: 34vh;
-  margin: var(--space-3);
-  background: var(--cream);
+  max-width: calc((100dvh - 190px) * 400 / 340);
+  width: 100%;
+  margin: var(--space-3) auto;
+  background: var(--paper);
+  border: 1px solid var(--line);
   border-radius: var(--radius);
   overflow: hidden;
 }
@@ -844,7 +972,7 @@ h3 {
   padding: 0;
   background: transparent;
   border: 0;
-  color: #1a1a1a;
+  color: var(--text);
   font-family: inherit;
   cursor: pointer;
   transition: transform var(--fast) var(--ease);
@@ -894,7 +1022,7 @@ h3 {
   letter-spacing: 0.06em;
   text-transform: uppercase;
   white-space: nowrap;
-  color: var(--cream);
+  color: var(--text);
   pointer-events: none;
   /* Tags on the outermost hotspots would clip against the stage edge. */
   max-width: 84px;
@@ -934,7 +1062,7 @@ h3 {
 }
 
 .caption-win {
-  font-family: var(--font-display), Georgia, serif;
+  font-family: var(--font-display), ui-monospace, monospace;
   font-size: var(--fs-lg);
   color: var(--green);
 }
@@ -966,7 +1094,7 @@ h3 {
   height: 30px;
   flex-shrink: 0;
   border-radius: 2px;
-  background: var(--cream);
+  background: var(--paper);
   overflow: hidden;
 }
 
@@ -1035,7 +1163,7 @@ h3 {
 
 .score-total {
   font-size: var(--fs-xl);
-  color: var(--cream);
+  color: var(--text);
 }
 
 /* --- Artifact viewer -----------------------------------------------------
@@ -1068,7 +1196,7 @@ h3 {
 }
 
 .artifact-title {
-  font-family: var(--font-display), Georgia, serif;
+  font-family: var(--font-display), ui-monospace, monospace;
   font-size: var(--fs-lg);
   color: var(--text);
 }
@@ -1087,7 +1215,7 @@ h3 {
 }
 
 .artifact-paper {
-  background: var(--cream);
+  background: var(--paper);
   border-radius: var(--radius);
   overflow: hidden;
 }
@@ -1112,10 +1240,9 @@ h3 {
   align-items: center;
   justify-content: space-between;
   gap: var(--space-3);
-  padding: var(--space-3) var(--space-4);
-  background: rgba(26, 26, 26, 0.94);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  padding: var(--space-2) var(--space-4);
+  background: var(--surface);
+  border-bottom: 1px solid var(--line);
 }
 
 /* Compact, but never below the 44px thumb-target floor — a sticky header is
@@ -1124,12 +1251,18 @@ h3 {
   padding: 0 var(--space-4);
 }
 
+/* The sky band. Only the hero and the room get it; every other section is
+   off-white, and that alternation is what gives the page its rhythm. */
 .lp-hero {
-  padding: 0 0 var(--space-6);
+  padding: var(--space-5) 0 var(--space-6);
+  background: var(--sky);
+  border-bottom: 1px solid var(--line);
 }
 
 .lp-hero-art {
-  background: var(--cream);
+  margin: 0 var(--space-5);
+  background: var(--paper);
+  border: 1px solid var(--line);
   overflow: hidden;
 }
 
@@ -1143,10 +1276,11 @@ h3 {
 }
 
 .lp-title {
-  font-family: var(--font-display), Georgia, serif;
-  font-size: var(--fs-2xl);
+  font-family: var(--font-display), ui-monospace, monospace;
+  font-size: var(--px-xl);
   font-weight: 400;
-  line-height: 1.16;
+  line-height: 1.4;
+  text-transform: uppercase;
 }
 
 .lp-sub {
@@ -1162,7 +1296,8 @@ h3 {
 }
 
 .lp-section-alt {
-  background: #161616;
+  background: var(--surface-2);
+  border-block: 1px solid var(--line);
 }
 
 .lp-steps {
@@ -1187,7 +1322,7 @@ h3 {
 }
 
 .lp-step-title {
-  font-family: var(--font-display), Georgia, serif;
+  font-family: var(--font-display), ui-monospace, monospace;
   font-size: var(--fs-md);
   font-weight: 400;
   margin-bottom: 2px;
@@ -1356,8 +1491,8 @@ h3 {
 
 .verb:active {
   transform: scale(0.96);
-  background: var(--cream);
-  color: #1a1a1a;
+  background: var(--text);
+  color: var(--surface);
 }
 
 .verb:disabled {
@@ -1368,25 +1503,18 @@ h3 {
 /* --- Desktop -------------------------------------------------------------
    MiniPay is still the primary target, so everything above stays the mobile
    layout untouched and desktop is additive from 900px up. Below that width
-   nothing in this section applies. */
+   nothing in this section applies.
+
+   The shell itself is full-bleed at every width — bands, rules and chrome run
+   edge to edge. Only long-form prose is capped, and by its own measure rather
+   than by boxing the whole page. */
 
 @media (min-width: 900px) {
-  .app-shell {
-    max-width: 1120px;
-  }
-
-  /* The room is the one screen that wants every pixel: the scene is fixed to
-     the art's ratio, so a narrower shell caps how large the drawing can get and
-     leaves dead charcoal under it. Falls back to 1120px where :has() is
-     unsupported, which still lays out correctly. */
-  .app-shell:has(.room) {
-    max-width: 1320px;
-  }
-
-  /* Pages that are a single column of cards would read as a stretched phone
-     at 1120px, so they keep a narrow measure and centre instead. */
+  /* Pages that are a single column of cards would look absurd stretched to
+     1920px, so their content keeps a comfortable measure and centres. The
+     surrounding shell still runs full width behind it. */
   .page-narrow {
-    max-width: 760px;
+    max-width: 860px;
     width: 100%;
     margin: 0 auto;
   }
@@ -1402,7 +1530,7 @@ h3 {
     bottom: auto;
     justify-content: flex-start;
     gap: var(--space-5);
-    padding-inline: max(var(--space-5), calc((100% - 760px) / 2));
+    padding-inline: max(var(--space-5), calc((100% - 860px) / 2));
     padding-bottom: 0;
     border-top: 0;
     border-bottom: 1px solid var(--line);
@@ -1435,14 +1563,20 @@ h3 {
   /* Pinned to the scene's viewBox ratio. The SVG is xMidYMid meet, but the
      hotspots are positioned against the STAGE, so any stage wider than the art
      letterboxes the drawing and strands hotspots off it — measured at 1440px,
-     3 of 7 ended up outside the artwork before this constraint. */
+     3 of 7 ended up outside the artwork before this constraint.
+
+     Sized from the ROW HEIGHT, not the column width: now that the shell is
+     full-bleed the column can be wider than the available height, and
+     `width: 100%` then wins over aspect-ratio and re-introduces the letterbox
+     (one hotspot went off-art at 1920px that way). Driving off height and
+     capping the width keeps the plate exactly 400:340 at any viewport. */
   .room-stage {
     grid-column: 1;
     grid-row: 3 / -1;
     aspect-ratio: 400 / 340;
-    width: 100%;
-    height: auto;
-    max-height: 100%;
+    height: 100%;
+    width: auto;
+    max-width: 100%;
     min-height: 0;
     margin: 0;
     align-self: start;
@@ -1595,8 +1729,8 @@ h3 {
   }
 
   .verb:hover:not(:disabled) {
-    background: var(--cream);
-    color: #1a1a1a;
+    background: var(--text);
+    color: var(--surface);
   }
 
   .verbs-close:hover,
@@ -1606,7 +1740,7 @@ h3 {
   }
 
   .btn:hover:not(:disabled) {
-    border-color: var(--cream);
+    border-color: var(--text);
   }
 
   .btn-primary:hover:not(:disabled) {
@@ -1621,7 +1755,7 @@ h3 {
 
   .chip:hover:not(:disabled) {
     background: var(--surface);
-    border-color: var(--cream);
+    border-color: var(--text);
   }
 
   .thumb:hover,

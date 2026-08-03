@@ -8,7 +8,7 @@ import { StudyScene, ObjectIcon } from "@/components/RoomArt";
 import { TabBar } from "@/components/TabBar";
 
 /**
- * Today feed — the app proper. Built to heal-grow-ui-spec.md screen 2:
+ * Today feed — the app proper. Built to docs/retro-mac-ui-spec.md:
  * day label, banner card, section header + muted subhead, 2-column tile grid,
  * bottom tabs. The landing page at `/` is the pitch; this is where a player
  * who already knows the game chooses how to play it.
@@ -100,8 +100,8 @@ export default function Play() {
             {WHATS_INSIDE.map((t) => (
               <li key={t.id}>
                 <div className="tile-art" style={{ display: "grid", placeItems: "center" }}>
-                  <span style={{ color: "#1a1a1a", display: "flex" }}>
-                    <ObjectIcon id={t.id} size={44} />
+                  <span className="ink">
+                    <ObjectIcon id={t.id} size={80} />
                   </span>
                 </div>
                 <span className="tile-label">{t.label}</span>

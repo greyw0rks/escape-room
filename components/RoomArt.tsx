@@ -8,9 +8,9 @@
  * is capped at 2 MB.
  */
 
-const INK = "#16130f";
-const INK_3 = "#8b8375";
-const RED = "#b8392b";
+const INK = "#111111";
+const INK_3 = "#7a7a7a";
+const RED = "#d0342c";
 
 /**
  * Where each object sits in the scene, as percentages of the viewBox, so the
@@ -141,142 +141,340 @@ export function StudyScene({ className }: { className?: string }) {
 }
 
 /* ── Object plates ─────────────────────────────────────────────────────────
-   Small marks used in inventory rows and lists. `currentColor` so they tint
-   with whatever they sit inside. */
+   Pixel-art marks used in tiles and inventory rows, drawn on a 20x20 grid
+   inside the existing 40x40 viewBox so each pixel is 2 units — whole numbers
+   at the 44px these render at, which is what keeps the edges hard.
+
+   Authored as strings so the shape is legible in source and editable by eye:
+   '#' paints a filled cell, anything else leaves it clear. Emitting <rect>
+   runs rather than a raster keeps `currentColor` tinting, needs no
+   `image-rendering` hack, and costs nothing against the bundle gate. */
 
 type IconProps = { size?: number; className?: string };
-const box = (p: IconProps) => ({
-  width: p.size ?? 20,
-  height: p.size ?? 20,
-  viewBox: "0 0 40 40",
-  fill: "none",
-  stroke: "currentColor",
-  strokeWidth: 1.5,
-  strokeLinecap: "round" as const,
-  strokeLinejoin: "round" as const,
-  className: p.className,
-  "aria-hidden": true,
-});
 
-export function DeskIcon(p: IconProps) {
+const CELL = 2; // 20x20 grid across a 40x40 viewBox
+
+/** Packs each run of filled cells in a row into one <rect>. */
+function pixels(rows: string[]): React.ReactElement[] {
+  const out: React.ReactElement[] = [];
+  rows.forEach((row, y) => {
+    let x = 0;
+    while (x < row.length) {
+      if (row[x] !== "#") {
+        x++;
+        continue;
+      }
+      let run = 0;
+      while (row[x + run] === "#") run++;
+      out.push(
+        <rect
+          key={`${x}-${y}`}
+          x={x * CELL}
+          y={y * CELL}
+          width={run * CELL}
+          height={CELL}
+        />
+      );
+      x += run;
+    }
+  });
+  return out;
+}
+
+function PixelIcon({ rows, ...p }: IconProps & { rows: string[] }) {
   return (
-    <svg {...box(p)}>
-      <path d="M4 16h32v4H4z" />
-      <path d="M7 20v14M33 20v14" />
-      <path d="M10 20h12v8H10z" />
-      <path d="M24 10h8l3 6H21z" opacity="0.75" />
+    <svg
+      width={p.size ?? 20}
+      height={p.size ?? 20}
+      viewBox="0 0 40 40"
+      fill="currentColor"
+      stroke="none"
+      shapeRendering="crispEdges"
+      className={p.className}
+      aria-hidden
+    >
+      {pixels(rows)}
     </svg>
   );
 }
 
-export function DrawerIcon(p: IconProps) {
-  return (
-    <svg {...box(p)}>
-      <rect x="6" y="10" width="28" height="20" rx="1" />
-      <path d="M6 20h28" />
-      <path d="M17 15h6M17 25h6" />
-    </svg>
-  );
-}
+const ART: Record<string, string[]> = {
+  desk: [
+    "                    ",
+    "                    ",
+    "                    ",
+    "                    ",
+    "                    ",
+    "  ################  ",
+    "  #              #  ",
+    "  ################  ",
+    "  #  ######      #  ",
+    "  #  #    #      #  ",
+    "  #  # ## #      #  ",
+    "  #  #    #      #  ",
+    "  #  ######      #  ",
+    "  ################  ",
+    "  ##          ##    ",
+    "  ##          ##    ",
+    "  ##          ##    ",
+    "  ##          ##    ",
+    "                    ",
+    "                    ",
+  ],
+  drawer: [
+    "                    ",
+    "                    ",
+    "                    ",
+    "  ################  ",
+    "  #              #  ",
+    "  #  ##########  #  ",
+    "  #  #        #  #  ",
+    "  #  #   ##   #  #  ",
+    "  #  #        #  #  ",
+    "  #  ##########  #  ",
+    "  #              #  ",
+    "  ################  ",
+    "  #              #  ",
+    "  #  ##########  #  ",
+    "  #  #        #  #  ",
+    "  #  #   ##   #  #  ",
+    "  #  #        #  #  ",
+    "  #  ##########  #  ",
+    "  ################  ",
+    "                    ",
+  ],
+  "letter-tray": [
+    "                    ",
+    "                    ",
+    "      ########      ",
+    "      #      #      ",
+    "      #  ##  #      ",
+    "      #      #      ",
+    "    ############    ",
+    "    #          #    ",
+    "    #   ####   #    ",
+    "    #          #    ",
+    "  ################  ",
+    "  #              #  ",
+    "  #  ##########  #  ",
+    "  #              #  ",
+    "  ################  ",
+    "  #              #  ",
+    "  #              #  ",
+    "  ################  ",
+    "                    ",
+    "                    ",
+  ],
+  globe: [
+    "                    ",
+    "       ######       ",
+    "     ##########     ",
+    "    ############    ",
+    "   ####    #####    ",
+    "   ###  ##  #####   ",
+    "  ####      #####   ",
+    "  ###   ##   #####  ",
+    "  ####      ######  ",
+    "   ###  ###  #####  ",
+    "   #####    #####   ",
+    "    ############    ",
+    "     ##########     ",
+    "       ######       ",
+    "        ####        ",
+    "        ####        ",
+    "      ########      ",
+    "    ############    ",
+    "                    ",
+    "                    ",
+  ],
+  "wall-map": [
+    "                    ",
+    "  ################  ",
+    "  #              #  ",
+    "  #    ##        #  ",
+    "  #   ####       #  ",
+    "  #    ##  ##    #  ",
+    "  #       ####   #  ",
+    "  #        ##    #  ",
+    "  #   ##      ## #  ",
+    "  #  ####    #####  ",
+    "  #   ##      ## #  ",
+    "  #        ##    #  ",
+    "  #  ##   ####   #  ",
+    "  # ####   ##    #  ",
+    "  #  ##          #  ",
+    "  #              #  ",
+    "  ################  ",
+    "                    ",
+    "                    ",
+    "                    ",
+  ],
+  safe: [
+    "                    ",
+    "  ################  ",
+    "  #              #  ",
+    "  #  ##########  #  ",
+    "  #  #        #  #  ",
+    "  #  #   ##   #  #  ",
+    "  #  #  ####  #  #  ",
+    "  #  # ###### #  #  ",
+    "  #  # ##  ## #  #  ",
+    "  #  # ###### #  #  ",
+    "  #  #  ####  #  #  ",
+    "  #  #   ##   #  #  ",
+    "  #  #        #  #  ",
+    "  #  ##########  #  ",
+    "  #           ## #  ",
+    "  #           ## #  ",
+    "  ################  ",
+    "                    ",
+    "                    ",
+    "                    ",
+  ],
+  door: [
+    "                    ",
+    "    ############    ",
+    "    #          #    ",
+    "    #  ######  #    ",
+    "    #  #    #  #    ",
+    "    #  #    #  #    ",
+    "    #  #    #  #    ",
+    "    #  ######  #    ",
+    "    #          #    ",
+    "    #      ##  #    ",
+    "    #      ##  #    ",
+    "    #          #    ",
+    "    #  ######  #    ",
+    "    #  #    #  #    ",
+    "    #  #    #  #    ",
+    "    #  #    #  #    ",
+    "    #  ######  #    ",
+    "    #          #    ",
+    "    ############    ",
+    "                    ",
+  ],
+  parrot: [
+    "                    ",
+    "        ######      ",
+    "      ##########    ",
+    "     ####    ####   ",
+    "    ###   ##  ####  ",
+    "  #####       ####  ",
+    "  #######    #####  ",
+    "    #############   ",
+    "     ###########    ",
+    "      #########     ",
+    "      #########     ",
+    "       #######      ",
+    "       #######      ",
+    "        #####       ",
+    "        #####       ",
+    "         ###        ",
+    "        ## ##       ",
+    "      ####  ####    ",
+    "                    ",
+    "                    ",
+  ],
+  "brass-key": [
+    "                    ",
+    "                    ",
+    "                    ",
+    "     ######         ",
+    "    ########        ",
+    "   ####  ####       ",
+    "   ###    ###       ",
+    "   ###    ###       ",
+    "   ####  ####       ",
+    "    ################",
+    "    ################",
+    "   ####  ####  ##  #",
+    "   ###    ###  ##  #",
+    "    ########   ##   ",
+    "     ######         ",
+    "                    ",
+    "                    ",
+    "                    ",
+    "                    ",
+    "                    ",
+  ],
+  ledger: [
+    "                    ",
+    "                    ",
+    "   ###############  ",
+    "   #             #  ",
+    "   #  #########  #  ",
+    "   #             #  ",
+    "   #  #########  #  ",
+    "   #             #  ",
+    "   #  ######     #  ",
+    "   #             #  ",
+    "   #  #########  #  ",
+    "   #             #  ",
+    "   #  #######    #  ",
+    "   #             #  ",
+    "   #  #########  #  ",
+    "   #             #  ",
+    "   ###############  ",
+    "   ###############  ",
+    "                    ",
+    "                    ",
+  ],
+  plate: [
+    "                    ",
+    "                    ",
+    "                    ",
+    "   ##############   ",
+    "   #            #   ",
+    "   #            #   ",
+    "   #            #   ",
+    "   #   ######   #   ",
+    "   #            #   ",
+    "   #            #   ",
+    "   #   ######   #   ",
+    "   #            #   ",
+    "   #            #   ",
+    "   #            #   ",
+    "   ##############   ",
+    "                    ",
+    "                    ",
+    "                    ",
+    "                    ",
+    "                    ",
+  ],
+};
 
-export function LetterTrayIcon(p: IconProps) {
-  return (
-    <svg {...box(p)}>
-      <path d="M5 22l4-10h22l4 10v6H5z" />
-      <path d="M5 22h9l2 3h8l2-3h9" />
-      <path d="M13 17h14" opacity="0.7" />
-    </svg>
-  );
-}
+export const DeskIcon = (p: IconProps) => <PixelIcon rows={ART.desk} {...p} />;
+export const DrawerIcon = (p: IconProps) => <PixelIcon rows={ART.drawer} {...p} />;
+export const LetterTrayIcon = (p: IconProps) => (
+  <PixelIcon rows={ART["letter-tray"]} {...p} />
+);
+export const GlobeIcon = (p: IconProps) => <PixelIcon rows={ART.globe} {...p} />;
+export const WallMapIcon = (p: IconProps) => <PixelIcon rows={ART["wall-map"]} {...p} />;
+export const SafeIcon = (p: IconProps) => <PixelIcon rows={ART.safe} {...p} />;
+export const DoorIcon = (p: IconProps) => <PixelIcon rows={ART.door} {...p} />;
+export const ParrotIcon = (p: IconProps) => <PixelIcon rows={ART.parrot} {...p} />;
+export const KeyIcon = (p: IconProps) => <PixelIcon rows={ART["brass-key"]} {...p} />;
+export const LedgerIcon = (p: IconProps) => <PixelIcon rows={ART.ledger} {...p} />;
 
-export function GlobeIcon(p: IconProps) {
-  return (
-    <svg {...box(p)}>
-      <circle cx="20" cy="17" r="11" />
-      <ellipse cx="20" cy="17" rx="4.5" ry="11" />
-      <path d="M9 17h22" />
-      <path d="M20 28v5M13 36h14l-2.5-3h-9z" />
-    </svg>
-  );
-}
-
-export function WallMapIcon(p: IconProps) {
-  return (
-    <svg {...box(p)}>
-      <rect x="5" y="7" width="30" height="26" />
-      <path d="M9 27c4-4 6-2 9-6s7-2 9-6" opacity="0.85" />
-      <circle cx="26" cy="24" r="3.5" opacity="0.7" />
-    </svg>
-  );
-}
-
-export function SafeIcon(p: IconProps) {
-  return (
-    <svg {...box(p)}>
-      <rect x="6" y="8" width="28" height="24" rx="1.5" />
-      <rect x="10" y="12" width="20" height="16" rx="1" opacity="0.6" />
-      <circle cx="20" cy="20" r="4" />
-      <path d="M20 16v-2M20 26v-2M16 20h-2M26 20h-2" />
-    </svg>
-  );
-}
-
-export function DoorIcon(p: IconProps) {
-  return (
-    <svg {...box(p)}>
-      <rect x="10" y="5" width="20" height="30" />
-      <rect x="14" y="9" width="12" height="9" opacity="0.6" />
-      <circle cx="14" cy="24" r="1.6" />
-    </svg>
-  );
-}
-
-export function ParrotIcon(p: IconProps) {
-  return (
-    <svg {...box(p)}>
-      <path d="M22 8a7 7 0 0 1 4 12.5c0 5-2 8-6 10" />
-      <path d="M22 12.5h.01" />
-      <path d="M15.5 13c-2 .5-3.5 2-3.5 4l3.5-1" />
-      <path d="M20 30.5c-3 0-5 1-6 3h14" opacity="0.75" />
-    </svg>
-  );
-}
-
-export function KeyIcon(p: IconProps) {
-  return (
-    <svg {...box(p)}>
-      <circle cx="13" cy="20" r="6" />
-      <path d="M19 20h14M29 20v5M33 20v4" />
-    </svg>
-  );
-}
-
-const BY_ID: Record<string, (p: IconProps) => React.ReactElement> = {
-  desk: DeskIcon,
-  drawer: DrawerIcon,
-  "open-drawer": DrawerIcon,
-  "letter-tray": LetterTrayIcon,
-  "letter-opener": LetterTrayIcon,
-  globe: GlobeIcon,
-  "wall-map": WallMapIcon,
-  safe: SafeIcon,
-  door: DoorIcon,
-  parrot: ParrotIcon,
-  "brass-key": KeyIcon,
-  ledger: DrawerIcon,
+const BY_ID: Record<string, string> = {
+  desk: "desk",
+  drawer: "drawer",
+  "open-drawer": "drawer",
+  "letter-tray": "letter-tray",
+  "letter-opener": "brass-key",
+  globe: "globe",
+  "wall-map": "wall-map",
+  safe: "safe",
+  door: "door",
+  parrot: "parrot",
+  "brass-key": "brass-key",
+  ledger: "ledger",
 };
 
 /** Falls back to a plain plate so an AI-generated room with unknown object
  *  ids still renders something intentional rather than a broken slot. */
 export function ObjectIcon({ id, size = 20 }: { id: string; size?: number }) {
-  const Icon = BY_ID[id];
-  if (Icon) return <Icon size={size} />;
-  return (
-    <svg {...box({ size })}>
-      <rect x="8" y="8" width="24" height="24" rx="1.5" />
-      <path d="M14 20h12" opacity="0.6" />
-    </svg>
-  );
+  return <PixelIcon rows={ART[BY_ID[id] ?? "plate"]} size={size} />;
 }
 
 export { INK, INK_3, RED };

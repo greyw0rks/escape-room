@@ -118,24 +118,38 @@ visitor (or a MiniPay reviewer) arrived with **no idea what the game was**.
   MiniPay's listing rules require.
 - `/play` and `/play/[sessionId]` coexist — Next gives the static segment precedence.
 
-### Visual identity — dark editorial (2026-07-31)
-Built to **`/home/greyw0rks/heal-grow-ui-spec.md`** plus the reference screenshot
-`Screenshot 2026-07-31 201911.png`. Two earlier attempts were rejected: a warm
-"Detective's Study" noir, then a light "paper & ink" scheme. The spec is now the
-source of truth — do not redesign from scratch without it.
+### Visual identity — retro Macintosh (2026-08-02)
+**Replaced the dark-editorial look.** Now built to **`docs/retro-mac-ui-spec.md`**
+(in-repo) from a new reference: the Susan Kare tribute site — sky-blue hero bands,
+hard black Mac window chrome, bitmap type, pixel-art icons. The old
+`heal-grow-ui-spec.md` is **retired** (kept at `~/heal-grow-ui-spec.md` for history
+only); do not build to it. It was a full design-system replacement, not a retheme,
+approved as such.
 
-- **Tokens:** charcoal `#1a1a1a` ground, `#252525` surfaces, **cream `#e8e0d0`**
-  for every illustration panel, text `#f0ede8` / `#9a9590`, cream CTA with dark
-  label, 4px radius (tight, not pill).
-- **The single strongest rule: art never sits on the charcoal.** Every drawing
-  sits on a cream panel. That contrast is the whole look.
-- **Type:** serif display (Fraunces) for headings and section titles, sans
-  (Inter) light/regular for body, mono for clock and codes. The serif/sans split
-  is what makes it read as editorial rather than as an app template.
-- **Repeating unit:** serif section title + muted sans subhead, then content.
-- **Screens follow the spec's three:** splash-style landing, Today feed
-  (banner card → hero panel with overlay card → 2-col tile grid → resources),
-  and the room. Bottom nav is **text-only tabs, no icons, no indicator bar**.
+- **Two load-bearing rules:** (1) borders are solid black `#111`, never
+  translucent — that hard frame is what reads as window chrome; (2) nothing is
+  rounded, `--radius: 0` (only `.btn-circle` keeps a radius).
+- **Tokens:** off-white `#f5f5f0` ground, sky `#a8d8f0` hero/room bands, white
+  `#ffffff` window interiors, paper `#fdfcf7` illustration ground, ink `#111`,
+  highlighter `--accent #ffd83d`, red `#d0342c`.
+- **Type:** Silkscreen (bitmap) for display/labels/buttons/title-bars **only** —
+  never a paragraph; **Silkscreen not Press Start 2P** (the latter wraps at 360px).
+  IBM Plex Mono for all body. Pixel type sized in whole px (`--px-*`), never rem.
+- **Window chrome is the motif:** `.window` frame + `.window-bar` pinstriped
+  title bar (CSS gradient, no image). Existing header rows became title bars.
+- **Icons are pixel art:** 12 object icons redrawn on a 20×20 grid inside the
+  40×40 viewBox (`'#'`-string rows → `<rect>` runs, `crispEdges`, `currentColor`).
+  App mark / `icon.svg` / OG image are a matching pixel keyhole. The **room scene
+  keeps its hand-drawn line art** — only the small icons are pixelated.
+- **Full-bleed at every width** — the old 480px mobile / 1120px desktop shell caps
+  were removed; `.app-shell` is `width: 100%`. `.room-stage` is pinned to the art's
+  400:340 ratio and driven off height so the full-bleed column can't letterbox it.
+- **Swept every hardcoded colour** outside globals.css: `opengraph-image.tsx`,
+  `public/icon.svg`, `manifest.ts` (bg/theme), `Brand.tsx`, `Artifacts.tsx` ink
+  palette, `RoomArt.tsx` INK/RED, and `.hotspot`/`.verb` inline colours.
+- **Verified:** all 5 routes full-bleed with zero overflow at 360 and 1440; 0/7
+  hotspots off-art at 360/768/1024/1280/1440/1920; all popovers place; 77 tests
+  pass; full playthrough clean; client JS 937 KB (< 2 MB gate).
 
 ### Gameplay — tappable scene + prop artifacts (2026-07-31)
 The room was a chat log with a row of buttons. It is now a place you look at.

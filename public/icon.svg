@@ -1,33 +1,10 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-label="Escape">
-  <!-- The mark: a keyhole with lamplight coming through it. The whole premise
-       of the game in one shape — the way out is lit, everything else is ink. -->
-  <defs>
-    <radialGradient id="lamp" cx="50%" cy="38%" r="52%">
-      <stop offset="0%" stop-color="#ffc677"/>
-      <stop offset="55%" stop-color="#f0a848"/>
-      <stop offset="100%" stop-color="#8a5f24"/>
-    </radialGradient>
-    <linearGradient id="plate" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#1f1a2b"/>
-      <stop offset="100%" stop-color="#0a0810"/>
-    </linearGradient>
-  </defs>
-
-  <rect width="64" height="64" rx="12" fill="url(#plate)"/>
-  <rect x="0.75" y="0.75" width="62.5" height="62.5" rx="11.25" fill="none"
-        stroke="#f0a848" stroke-opacity="0.34"/>
-  <!-- Inner hairline: the doubled edge is what reads as "made" not "default". -->
-  <rect x="5.5" y="5.5" width="53" height="53" rx="8" fill="none"
-        stroke="#f2ece2" stroke-opacity="0.11"/>
-
-  <!-- Light pooling out of the keyhole, downward like a spill. -->
-  <path d="M32 24 L46 55 H18 Z" fill="#f0a848" opacity="0.14"/>
-
-  <!-- Keyhole: circle + tapered shaft, drawn as one path. -->
-  <path d="M32 17.5a8 8 0 0 0-4.2 14.8L24.5 46h15l-3.3-13.7A8 8 0 0 0 32 17.5z"
-        fill="url(#lamp)"/>
-
-  <!-- Escutcheon screws — two small marks that make it read as hardware. -->
-  <circle cx="32" cy="12" r="1.4" fill="#f2ece2" opacity="0.3"/>
-  <circle cx="32" cy="52" r="1.4" fill="#f2ece2" opacity="0.3"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-label="Escape" shape-rendering="crispEdges">
+  <!-- The mark: a keyhole punched into a plate. The whole premise of the game
+       in one shape — the way out. Pixel-drawn on a 16x16 grid so it stays on
+       the pixel grid at any multiple-of-16 size, matching the object icons. -->
+  <rect width="64" height="64" fill="#ffd83d"/>
+  <!-- hard black frame -->
+  <path d="M0 0h64v4H0zM0 60h64v4H0zM0 0h4v64H0zM60 0h4v64h-4z" fill="#111111"/>
+  <!-- keyhole: round bow over a tapered stem -->
+  <path d="M24 16h16v4H24zM20 20h24v4H20zM20 24h24v4H20zM20 28h24v4H20zM24 32h16v4H24zM28 36h8v4h-8zM24 40h16v4H24zM20 44h24v4H20z" fill="#111111"/>
 </svg>
